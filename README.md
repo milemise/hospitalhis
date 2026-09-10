@@ -25,8 +25,7 @@ El sistema está construido bajo el patrón arquitectónico **MVC (Modelo-Vista-
 
 ## 🛠️ Requisitos e Instalación Local
 
-### 1. Clonar el Repositorio
-```bash
+1. Clonar el Repositorio
 git clone [https://github.com/milemise/hospitalhis.git](https://github.com/milemise/hospitalhis.git)
 cd hospitalhis
 2. Instalar Dependencias
