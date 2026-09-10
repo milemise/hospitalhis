@@ -21,12 +21,12 @@ const Cama = sequelize.define('Cama', {
     allowNull: false
   },
   estado: {
-    type: DataTypes.ENUM('Libre', 'Ocupada', 'En Limpieza', 'Fuera de Servicio'),
+    type: DataTypes.STRING(50), // Cambiado a STRING para evitar choques
     allowNull: false,
-    defaultValue: 'Libre'
+    defaultValue: 'libre'
   },
   genero_asignado: {
-    type: DataTypes.ENUM('M', 'F'),
+    type: DataTypes.STRING(2), // Cambiado a STRING
     allowNull: true
   }
 }, {
@@ -36,7 +36,7 @@ const Cama = sequelize.define('Cama', {
 
 Cama.associate = (models) => {
   Cama.belongsTo(models.Habitacion, { foreignKey: 'id_habitacion', as: 'habitacion' });
-  Cama.hasMany(models.AsignacionCama, { foreignKey: 'id_cama', as: 'asignaciones' });
+  Cama.hasMany(models.Admision, { foreignKey: 'id_cama_asignada', as: 'admisiones' });
 };
 
 module.exports = Cama;

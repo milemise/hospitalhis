@@ -10,184 +10,180 @@ block content
           .card-body.p-4
             if error && error.length > 0
               .alert.alert-danger= error
-            if success && success.length > 0
-              .alert.alert-success= success
 
-            form(action="/admisiones", method="POST", id="form-admision")
+            form(action="/admisiones", method="POST")
+              input#paciente-hidden-input(type="hidden", name="id_paciente")
+              input#tipo-registro-input(type="hidden", name="tipo_registro")
+
               .card.mb-4
                 .card-header.fw-bold 1. Datos del Paciente
                 .card-body
-                  .row.align-items-end
-                    .col-md-8.mb-3.mb-md-0
-                      label.form-label(for="id_paciente_seleccionado") Seleccionar Paciente Existente
-                      select.form-select#id_paciente_seleccionado(name="id_paciente_seleccionado")
-                        option(value="") -- Cargar lista de camas --
+                  .row.align-items-center
+                    .col-md-8
+                      label.form-label(for="paciente-select") Seleccionar Paciente
+                      select.form-select#paciente-select
+                        option(value="") -- Seleccionar o Registrar --
                         option(value="nuevo") -- Registrar Nuevo Paciente --
                         each p in pacientes
-                          option(value=p.id_paciente, selected=(pacienteSeleccionado && pacienteSeleccionado.id_paciente == p.id_paciente), data-genero=p.genero)= `${p.nombre} ${p.apellido} (DNI: ${p.dni})`
-                    .col-md-4.d-flex.align-items-center.justify-content-start.justify-content-md-end.pb-1
+                          option(value=p.id_paciente, data-genero=p.genero)= `${p.nombre} ${p.apellido} (DNI: ${p.dni})`
+                    .col-md-4.d-flex.justify-content-md-end.pt-3
                       .form-check.form-switch
                         input.form-check-input#es_emergencia(type="checkbox", name="es_emergencia")
-                        label.form-check-label.fw-bold.text-danger(for="es_emergencia") Emergencia
-
-              #newPacienteFields.card.mb-4(style="display: none;")
-                .card-header.fw-bold Información del Nuevo Paciente
-                .card-body
-                  .row.g-3
-                    .col-md-6#nombreNuevoContainer: .form-floating
-                      input.form-control#nombre_paciente_nuevo(type="text", name="nombre_paciente_nuevo", placeholder="Nombre")
-                      label(for="nombre_paciente_nuevo") Nombre
-                    .col-md-6#apellidoNuevoContainer: .form-floating
-                      input.form-control#apellido_paciente_nuevo(type="text", name="apellido_paciente_nuevo", placeholder="Apellido")
-                      label(for="apellido_paciente_nuevo") Apellido
-                    .col-md-6#dniNuevoContainer: .form-floating
-                      input.form-control#dni_paciente_nuevo(type="text", name="dni_paciente_nuevo", placeholder="DNI")
-                      label(for="dni_paciente_nuevo") DNI
-                    .col-md-6#fechaNacimientoNuevoContainer
-                      label.form-label(for="fecha_nacimiento_nuevo") Fecha de Nacimiento
-                      input.form-control#fecha_nacimiento_nuevo(type="date", name="fecha_nacimiento_nuevo")
-                    .col-md-6#generoNuevoContainer
-                      label.form-label(for="genero_paciente_nuevo") Género
-                      select.form-select#genero_paciente_nuevo(name="genero_paciente_nuevo")
-                        option(value="") Seleccionar Género
-                        option(value="Masculino") Masculino
-                        option(value="Femenino") Femenino
-                        option(value="Otro") Otro
-                        option(value="No especificado") No especificado
-                    .col-md-6
-                      label.form-label(for="id_obra_social_nuevo") Obra Social
-                      select.form-select#id_obra_social_nuevo(name="id_obra_social_nuevo")
-                        option(value="") Seleccionar Obra Social
-                        each os in obrasSociales
-                          option(value=os.id_obra_social)= os.nombre
-                    .col-md-6.offset-md-6
-                      .form-floating
-                        input.form-control#numero_afiliado_nuevo(type="text", name="numero_afiliado_nuevo", placeholder="Número de Afiliado")
-                        label(for="numero_afiliado_nuevo") Número de Afiliado
+                        label.form-check-label.fw-bold.text-danger(for="es_emergencia") Es Emergencia
+              
+              #nuevo-paciente-fields(style="display: none;")
+                .card.mb-4
+                  .card-header.fw-bold#nuevo-paciente-titulo Información del Nuevo Paciente
+                  .card-body
+                    .row.g-3
+                      .col-md-6
+                        label.form-label(for="genero-paciente-nuevo") Género (Obligatorio)
+                        select.form-select#genero-paciente-nuevo(name="genero_paciente_nuevo")
+                          option(value="") Seleccionar Género
+                          option(value="Masculino") Masculino
+                          option(value="Femenino") Femenino
+                          option(value="Otro") Otro
+                          option(value="No especificado") No especificado
+                      
+                      .col-md-6.campo-normal
+                        label.form-label(for="nombre-paciente-nuevo") Nombre
+                        input.form-control(type="text", name="nombre_paciente_nuevo", id="nombre-paciente-nuevo")
+                      .col-md-6.campo-normal
+                        label.form-label(for="apellido-paciente-nuevo") Apellido
+                        input.form-control(type="text", name="apellido_paciente_nuevo", id="apellido-paciente-nuevo")
+                      .col-md-6.campo-normal
+                        label.form-label(for="dni-paciente-nuevo") DNI
+                        input.form-control(type="text", name="dni_paciente_nuevo", id="dni-paciente-nuevo")
+                      .col-md-6.campo-normal
+                        label.form-label(for="fecha-nacimiento-nuevo") Fecha de Nacimiento
+                        input.form-control(type="date", name="fecha_nacimiento_nuevo", id="fecha-nacimiento-nuevo")
 
               .card.mb-4
                 .card-header.fw-bold 2. Detalles de la Admisión
                 .card-body
-                  .row.g-3
-                    .col-md-6
-                      label.form-label(for="fecha_ingreso") Fecha de Ingreso
-                      input.form-control#fecha_ingreso(type="datetime-local", name="fecha_ingreso", value=new Date().toISOString().slice(0, 16), required)
-                    .col-md-12
-                      label.form-label(for="motivo_internacion") Motivo de Internación
-                      textarea.form-control#motivo_internacion(name="motivo_internacion", placeholder="Describa el motivo de la internación", required, rows="3")
+                  textarea.form-control(name="motivo_internacion", placeholder="Describa el motivo de la internación...", required, rows="3")
 
               .card.mb-4
                 .card-header.fw-bold 3. Asignación de Cama
-                .card-body
-                  if !pacienteSeleccionado
-                    .alert.alert-warning Seleccione un paciente existente para ver las camas disponibles.
-                  else
-                    .row.g-3
-                      .col-md-4
-                        label.form-label(for="ala-select") Ala
-                        select.form-select#ala-select(disabled=(camasDisponibles.length === 0))
-                          option(value="") -- Seleccionar Ala --
-                      .col-md-4
-                        label.form-label(for="habitacion-select") Habitación
-                        select.form-select#habitacion-select(disabled)
-                          option(value="") -- Seleccionar Habitación --
-                      .col-md-4
-                        label.form-label(for="cama-select") Cama
-                        select.form-select#cama-select(disabled)
-                          option(value="") -- Seleccionar Cama --
-                    input(type="hidden", name="id_cama_asignada", id="id_cama_final")
-                    if camasDisponibles.length === 0
-                      .alert.alert-info.mt-3 No hay camas que cumplan con los criterios para este paciente.
+                .card-body#cama-selection-container
+                  .alert.alert-warning Seleccione un tipo de paciente y género para ver las camas disponibles.
 
               .d-flex.justify-content-end.mt-4
                 a.btn.btn-secondary.me-2(href="/admisiones") Cancelar
                 button.btn.btn-primary.btn-lg(type="submit") Guardar Admisión
 
-block scripts
-  script.
-    const camasData = !{JSON.stringify(camasDisponibles)};
-    const pacientesData = !{JSON.stringify(pacientes)};
+    script.
+      const camasData = !{JSON.stringify(camasDisponibles || [])};
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const pacienteSelect = document.getElementById('id_paciente_seleccionado');
-        const newPacienteFields = document.getElementById('newPacienteFields');
+      document.addEventListener('DOMContentLoaded', function () {
+        const pacienteSelect = document.getElementById('paciente-select');
+        const nuevoPacienteFields = document.getElementById('nuevo-paciente-fields');
+        const generoNuevoSelect = document.getElementById('genero-paciente-nuevo');
+        const pacienteHiddenInput = document.getElementById('paciente-hidden-input');
+        const tipoRegistroInput = document.getElementById('tipo-registro-input');
         const emergenciaCheckbox = document.getElementById('es_emergencia');
-        
-        const alaSelect = document.getElementById('ala-select');
-        const habitacionSelect = document.getElementById('habitacion-select');
-        const camaSelect = document.getElementById('cama-select');
-        const camaFinalInput = document.getElementById('id_cama_final');
-        const form = document.getElementById('form-admision');
+        const camaContainer = document.getElementById('cama-selection-container');
+        const camposNormales = document.querySelectorAll('.campo-normal');
+        const nuevoPacienteTitulo = document.getElementById('nuevo-paciente-titulo');
 
-        function toggleNewPacienteForm() {
-            if (pacienteSelect.value === 'nuevo') {
-                newPacienteFields.style.display = 'block';
-            } else {
-                newPacienteFields.style.display = 'none';
-            }
+        function updateFormState() {
+          const selectedValue = pacienteSelect.value;
+          const isEmergencia = emergenciaCheckbox.checked;
+          let generoParaFiltrar = null;
+
+          if (isEmergencia) {
+              nuevoPacienteFields.style.display = 'block';
+              pacienteSelect.disabled = true;
+              pacienteSelect.value = '';
+              camposNormales.forEach(el => el.style.display = 'none');
+              nuevoPacienteTitulo.textContent = 'Información del Paciente de Emergencia';
+              tipoRegistroInput.value = 'emergencia';
+              pacienteHiddenInput.value = '';
+              generoParaFiltrar = generoNuevoSelect.value;
+          } else if (selectedValue === 'nuevo') {
+              nuevoPacienteFields.style.display = 'block';
+              pacienteSelect.disabled = false;
+              camposNormales.forEach(el => el.style.display = 'block');
+              nuevoPacienteTitulo.textContent = 'Información del Nuevo Paciente';
+              tipoRegistroInput.value = 'nuevo';
+              pacienteHiddenInput.value = '';
+              generoParaFiltrar = generoNuevoSelect.value;
+          } else if (selectedValue) {
+              nuevoPacienteFields.style.display = 'none';
+              pacienteSelect.disabled = false;
+              pacienteHiddenInput.value = selectedValue;
+              tipoRegistroInput.value = 'existente';
+              const selectedOption = pacienteSelect.options[pacienteSelect.selectedIndex];
+              generoParaFiltrar = selectedOption.dataset.genero;
+          } else {
+              nuevoPacienteFields.style.display = 'none';
+              pacienteSelect.disabled = false;
+              pacienteHiddenInput.value = '';
+              tipoRegistroInput.value = '';
+          }
+          updateCamaOptions(generoParaFiltrar);
         }
 
-        pacienteSelect.addEventListener('change', function() {
-            toggleNewPacienteForm();
-            if (this.value && this.value !== 'nuevo' && this.value !== '') {
-                window.location.href = '/admisiones/nueva?id_paciente=' + this.value;
-            }
-        });
-        
-        emergenciaCheckbox.addEventListener('change', toggleNewPacienteForm);
-        toggleNewPacienteForm();
+        function updateCamaOptions(generoSeleccionado) {
+          camaContainer.innerHTML = `
+            <div class="row g-3">
+              <div class="col-md-4"><label class="form-label" for="ala-select">Ala</label><select class="form-select" id="ala-select" disabled><option value="">-- Elija paciente/género --</option></select></div>
+              <div class="col-md-4"><label class="form-label" for="habitacion-select">Habitación</label><select class="form-select" id="habitacion-select" disabled><option value="">-- Elija un ala --</option></select></div>
+              <div class="col-md-4"><label class="form-label" for="cama-select">Cama</label><select class="form-select" id="cama-select" name="id_cama_asignada" disabled required><option value="">-- Elija una habitación --</option></select></div>
+            </div>`;
 
-        if (camasData.length > 0) {
-            const alas = [...new Set(camasData.map(cama => cama.habitacion.ala.nombre))];
-            alas.forEach(nombreAla => {
-                const option = new Option(nombreAla, nombreAla);
-                alaSelect.add(option);
-            });
+          const newAlaSelect = document.getElementById('ala-select');
+          const newHabitacionSelect = document.getElementById('habitacion-select');
+          const newCamaSelect = document.getElementById('cama-select');
+
+          if (!generoSeleccionado || !['Masculino', 'Femenino'].includes(generoSeleccionado)) {
+            return;
+          }
+
+          const camasValidas = camasData.filter(cama => {
+            const habitacion = cama.habitacion;
+            if (habitacion.tipo !== 'Compartida') return true;
+            const otraCamaOcupada = habitacion.camas.find(c => c.id_cama !== cama.id_cama && c.estado === 'Ocupada');
+            if (!otraCamaOcupada) return true;
+            const admision = otraCamaOcupada.admisiones[0];
+            return admision && admision.paciente && admision.paciente.genero === generoSeleccionado;
+          });
+
+          if (camasValidas.length === 0) {
+            camaContainer.innerHTML = '<div class="alert alert-info">No hay camas disponibles que cumplan los criterios para el género seleccionado.</div>';
+            return;
+          }
+
+          newAlaSelect.innerHTML = '<option value="">-- Seleccione un Ala --</option>';
+          const alasUnicas = [...new Map(camasValidas.map(cama => [cama.habitacion.ala.id_ala, cama.habitacion.ala])).values()];
+          alasUnicas.forEach(ala => newAlaSelect.add(new Option(ala.nombre, ala.id_ala)));
+          newAlaSelect.disabled = false;
+
+          newAlaSelect.addEventListener('change', function() {
+              newHabitacionSelect.innerHTML = '<option value="">-- Elija una habitación --</option>';
+              newCamaSelect.innerHTML = '<option value="">-- Elija una habitación --</option>';
+              newCamaSelect.disabled = true;
+              if (this.value) {
+                  const camasEnAla = camasValidas.filter(cama => cama.habitacion.id_ala == this.value);
+                  const habitacionesUnicas = [...new Map(camasEnAla.map(cama => [cama.habitacion.id_habitacion, cama.habitacion])).values()];
+                  habitacionesUnicas.forEach(hab => newHabitacionSelect.add(new Option(`${hab.numero} (${hab.tipo})`, hab.id_habitacion)));
+                  newHabitacionSelect.disabled = false;
+              }
+          });
+
+          newHabitacionSelect.addEventListener('change', function() {
+              newCamaSelect.innerHTML = '<option value="">-- Elija una cama --</option>';
+              if (this.value) {
+                  const camasEnHabitacion = camasValidas.filter(cama => cama.habitacion.id_habitacion == this.value);
+                  camasEnHabitacion.forEach(cama => newCamaSelect.add(new Option(cama.numero, cama.id_cama)));
+                  newCamaSelect.disabled = false;
+              }
+          });
         }
 
-        alaSelect.addEventListener('change', function() {
-            habitacionSelect.innerHTML = '<option value="">-- Seleccionar Habitación --</option>';
-            camaSelect.innerHTML = '<option value="">-- Seleccionar Cama --</option>';
-            habitacionSelect.disabled = true;
-            camaSelect.disabled = true;
-            camaFinalInput.value = '';
+        pacienteSelect.addEventListener('change', updateFormState);
+        generoNuevoSelect.addEventListener('change', updateFormState);
+        emergenciaCheckbox.addEventListener('change', updateFormState);
 
-            if (this.value) {
-                const habitacionesEnAla = camasData.filter(cama => cama.habitacion.ala.nombre === this.value);
-                const habitacionesUnicas = [...new Set(habitacionesEnAla.map(cama => cama.habitacion.numero))];
-
-                habitacionesUnicas.forEach(numHab => {
-                    const habitacionObj = habitacionesEnAla.find(c => c.habitacion.numero === numHab).habitacion;
-                    const option = new Option(`Habitación ${numHab} (${habitacionObj.tipo})`, habitacionObj.id_habitacion);
-                    habitacionSelect.add(option);
-                });
-                habitacionSelect.disabled = false;
-            }
-        });
-        
-        habitacionSelect.addEventListener('change', function() {
-            camaSelect.innerHTML = '<option value="">-- Seleccionar Cama --</option>';
-            camaSelect.disabled = true;
-            camaFinalInput.value = '';
-
-            if (this.value) {
-                const camasEnHabitacion = camasData.filter(cama => cama.habitacion.id_habitacion == this.value);
-                camasEnHabitacion.forEach(cama => {
-                    const option = new Option(`Cama ${cama.numero}`, cama.id_cama);
-                    camaSelect.add(option);
-                });
-                camaSelect.disabled = false;
-            }
-        });
-
-        camaSelect.addEventListener('change', function() {
-            camaFinalInput.value = this.value;
-        });
-
-        form.addEventListener('submit', function(e) {
-            if (pacienteSelect.value !== 'nuevo' && !camaFinalInput.value) {
-                e.preventDefault();
-                alert('Debe seleccionar un Ala, Habitación y Cama para la admisión.');
-            }
-        });
-    });
+        updateFormState();
+      });

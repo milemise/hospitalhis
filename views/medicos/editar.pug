@@ -1,39 +1,75 @@
 extends ../layout
 
 block content
-  .row.justify-content-center
-    .col-md-8.col-lg-7
-      .card.shadow-sm.my-5
-        .card-header.bg-primary.text-white.py-3
-          h1.h4.mb-0 Editar Médico: #{medico.nombre} #{medico.apellido}
+  .container.mt-4
+    if error && error.length > 0
+      .alert.alert-danger.alert-dismissible.fade.show
+        | #{error}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+
+    .card.shadow-sm.border-0.rounded-3
+      .card-header.bg-primary.text-white.py-3
+        h4.mb-0 Editar Médico: #{medico.nombre} #{medico.apellido}
+      
+      .card-body.p-4
         form(action="/medicos/actualizar/" + medico.id_medico, method="POST")
-          .card-body.p-4
-            .row.g-3
-              .col-md-6
-                label.form-label(for="nombre") Nombre
-                input.form-control#nombre(type="text", name="nombre", value=medico.nombre, required)
-              .col-md-6
-                label.form-label(for="apellido") Apellido
-                input.form-control#apellido(type="text", name="apellido", value=medico.apellido, required)
-              .col-md-6
-                label.form-label(for="id_especialidad") Especialidad
-                select.form-select#id_especialidad(name="id_especialidad", required)
-                  option(value="") Seleccionar Especialidad
+          .row.g-3
+            .col-md-4
+              label.form-label.fw-bold DNI
+              input.form-control(type="text", name="dni", value=medico.dni || '')
+            
+            .col-md-4
+              label.form-label.fw-bold Nombre
+              input.form-control(type="text", name="nombre", value=medico.nombre, required)
+            
+            .col-md-4
+              label.form-label.fw-bold Apellido
+              input.form-control(type="text", name="apellido", value=medico.apellido, required)
+            
+            .col-md-4
+              label.form-label.fw-bold Fecha de Nacimiento
+              - let fechaFmt = '';
+              if medico.fecha_nacimiento
+                - fechaFmt = typeof medico.fecha_nacimiento.toISOString === 'function' ? medico.fecha_nacimiento.toISOString().split('T')[0] : String(medico.fecha_nacimiento).split('T')[0];
+              input.form-control(type="date", name="fecha_nacimiento", value=fechaFmt)
+            
+            .col-md-4
+              label.form-label.fw-bold Género
+              select.form-select(name="genero")
+                option(value="") Seleccionar...
+                option(value="Masculino", selected=medico.genero==='Masculino') Masculino
+                option(value="Femenino", selected=medico.genero==='Femenino') Femenino
+                option(value="Otro", selected=medico.genero==='Otro') Otro
+            
+            .col-md-4
+              label.form-label.fw-bold Matrícula Profesional
+              input.form-control(type="text", name="matricula", value=medico.matricula, required)
+            
+            .col-md-6
+              label.form-label.fw-bold Especialidad
+              select.form-select(name="id_especialidad")
+                option(value="") Seleccionar especialidad...
+                if especialidades
                   each esp in especialidades
-                    option(value=esp.id_especialidad, selected=(esp.id_especialidad === medico.id_especialidad))= esp.nombre
-              .col-md-6
-                label.form-label(for="matricula") Matrícula
-                input.form-control#matricula(type="text", name="matricula", value=medico.matricula, required)
-              .col-md-6
-                label.form-label(for="telefono") Teléfono (Opcional)
-                input.form-control#telefono(type="text", name="telefono", value=medico.telefono || '')
-              .col-md-6
-                label.form-label(for="email") Email
-                input.form-control#email(type="email", name="email", value=medico.email, required)
-              .col-12
-                .form-check.form-switch.pt-2
-                  input.form-check-input#activo(type="checkbox", name="activo", checked=medico.activo)
-                  label.form-check-label(for="activo") Activo
-          .card-footer.text-end.bg-light
-            a.btn.btn-secondary(href="/medicos") Cancelar
-            button.btn.btn-primary.ms-2(type="submit") Actualizar Médico
+                    option(value=esp.id_especialidad, selected=medico.id_especialidad===esp.id_especialidad) #{esp.nombre}
+            
+            .col-md-6
+              label.form-label.fw-bold Teléfono
+              input.form-control(type="text", name="telefono", value=medico.telefono || '')
+            
+            .col-md-6
+              label.form-label.fw-bold Email
+              input.form-control(type="email", name="email", value=medico.email || '')
+            
+            .col-md-6
+              label.form-label.fw-bold Dirección
+              input.form-control(type="text", name="direccion", value=medico.direccion || '')
+
+            .col-12.mt-3
+              .form-check.form-switch
+                input.form-check-input(type="checkbox", name="activo", id="activoCheck", checked=medico.activo !== false)
+                label.form-check-label.fw-bold(for="activoCheck") Profesional Activo en la Institución
+          
+          .card-footer.bg-white.text-end.mt-4.pb-0.pe-0.border-0
+            a.btn.btn-secondary.me-2(href="/medicos") Cancelar
+            button.btn.btn-primary(type="submit") Actualizar Médico

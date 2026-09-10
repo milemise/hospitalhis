@@ -2,54 +2,71 @@ extends ../layout
 
 block content
   .container.mt-4
+    if error && error.length > 0
+      .alert.alert-danger.alert-dismissible.fade.show
+        | #{error}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+    if success && success.length > 0
+      .alert.alert-success.alert-dismissible.fade.show
+        | #{success}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+
     .card.shadow-lg.p-4
-      .d-flex.justify-content-between.align-items-center.mb-4
-        h1.card-title.h3.text-primary.fw-bold
-          i.fas.fa-user-injured.me-2
-          | Pacientes y sus Admisiones
-        a(href="/pacientes/nuevo").btn.btn-info.text-white.shadow-sm
-          i.fas.fa-plus.me-2
-          | Nuevo Paciente
-
-      .table-responsive
-        table.table.table-hover.table-striped.table-bordered.shadow-sm.rounded
-          thead.bg-light
-            tr
-              th Nombre
-              th Fecha Nacimiento
-              th Sexo
-              th DNI
-              th Última Admisión
-              th Estado
-              th Habitación
-              th Acciones
-
-          tbody
-            each paciente in pacientes
-              tr
-                td.fw-medium #{paciente.nombre} #{paciente.apellido}
-                td #{paciente.fecha_nacimiento ? new Date(paciente.fecha_nacimiento).toLocaleDateString() : 'N/A'}
-                td
-                  span.badge.rounded-pill(class=(paciente.genero === 'Masculino' ? 'bg-primary' : paciente.genero === 'Femenino' ? 'bg-danger' : 'bg-secondary'))
-                    | #{paciente.genero === 'Masculino' ? 'Masculino' : paciente.genero === 'Femenino' ? 'Femenino' : 'Otro'}
-                td.font-monospace #{paciente.dni}
-                
-                - const admisionActiva = paciente.admisiones && paciente.admisiones.length > 0 ? paciente.admisiones[0] : null;
-                - const fechaIngresoAdmision = admisionActiva ? new Date(admisionActiva.fecha_ingreso).toLocaleDateString() : 'N/A';
-                - const estadoAdmision = admisionActiva ? admisionActiva.estado_admision : 'Sin internar';
-                - const habitacionAsignada = admisionActiva && admisionActiva.cama && admisionActiva.cama.habitacion ? admisionActiva.cama.habitacion.numero : '—';
-
-                td= fechaIngresoAdmision
-                td
-                  span.badge.rounded-pill(class=(estadoAdmision === 'Activa' ? 'bg-success' : 'bg-secondary'))
-                    | #{estadoAdmision}
-                td.font-medium= habitacionAsignada
-                
-                td
-                  .btn-group.btn-group-sm(role='group')
-                    a(href=`/pacientes/admision/${paciente.id_paciente}`, class="btn btn-outline-primary", title="Ver Admisión del Paciente")
-                      i.fas.fa-eye
-                    a(href=`/pacientes/editar/${paciente.id_paciente}`, class="btn btn-outline-warning", title="Editar Paciente")
-                      i.fas.fa-edit
-                    a(href=`/admisiones/nueva?id_paciente=${paciente.id_paciente}`).btn.btn-outline-info(title="Registrar Nueva Admisión")
-                      i.fas.fa-procedures
+      .card-header.bg-primary.text-white.py-3
+        .d-flex.justify-content-between.align-items-center
+          h1.h4.mb-0 Padrón de Pacientes y Personal
+          a.btn.btn-info.text-white(href="/pacientes/nuevo")
+            i.fas.fa-plus.me-1
+            | Registrar Paciente
+      .card-body
+        form.mb-4(action="/pacientes", method="GET")
+          .row.g-2
+            .col-md-5
+              .input-group
+                input.form-control(type="text", name="buscar", placeholder="Buscar por DNI o Nombre...", value=buscar)
+                button.btn.btn-outline-primary(type="submit") Buscar
+            .col-md-4
+              select.form-select(name="filtro", onchange="this.form.submit()")
+                option(value="activos", selected=filtro==='activos') Registros Activos
+                option(value="todos", selected=filtro==='todos') Todos los Registros
+                option(value="inactivos", selected=filtro==='inactivos') Registros Inactivos
+            .col-md-3
+              if buscar || filtro !== 'activos'
+                a.btn.btn-outline-secondary.w-100(href="/pacientes") Limpiar Filtros
+        if pacientes.length === 0
+          .alert.alert-info.mb-0 No se encontraron resultados para este filtro.
+        else
+          .table-responsive
+            table.table.table-striped.table-hover.table-bordered.align-middle
+              thead.table-light
+                tr
+                  th ID
+                  th DNI / Matrícula
+                  th Nombre Completo / Rol
+                  th Teléfono
+                  th Estado
+                  th.text-center Acciones
+              tbody
+                each paciente in pacientes
+                  tr
+                    td #{paciente.id_paciente}
+                    td #{paciente.dni}
+                    td #{paciente.nombre} #{paciente.apellido}
+                    td #{paciente.telefono || 'N/A'}
+                    td
+                      - const estadoTexto = (paciente.activo === false) ? 'Inactivo' : 'Activo'
+                      - const estadoClass = (paciente.activo === false) ? 'bg-secondary' : 'bg-success'
+                      span(class=`badge ${estadoClass}`) #{estadoTexto}
+                    td.text-center
+                      .btn-group
+                        if paciente.esPersonalMedico
+                          a.btn.btn-sm.btn-outline-info(href="/medicos/editar/" + paciente.id_medicoOriginal, title="Ver Ficha de Médico")
+                            i.fas.fa-user-md.me-1
+                            | Ver Médico
+                        else
+                          a.btn.btn-sm.btn-outline-info(href="/pacientes/historia/" + paciente.id_paciente, title="Historia Clínica") 
+                            i.fas.fa-folder-open.me-1
+                            | Historia
+                          a.btn.btn-sm.btn-outline-primary(href="/pacientes/editar/" + paciente.id_paciente) Editar
+                          form(action="/pacientes/cancelar/" + paciente.id_paciente, method="POST", style="display:inline;", onsubmit="return confirm('¿Está seguro de cambiar el estado de este paciente?');")
+                            button.btn.btn-sm.btn-outline-warning(type="submit") Cambiar Estado

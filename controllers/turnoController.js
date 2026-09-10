@@ -2,15 +2,30 @@ const { Turno, Paciente, Medico } = require('../models');
 
 exports.listarTurnos = async (req, res) => {
     try {
-        const turnos = await Turno.findAll({
+        const buscar = (req.query.buscar || '').toLowerCase().trim();
+
+        let turnos = await Turno.findAll({
             include: [
                 { model: Paciente, as: 'paciente' },
                 { model: Medico, as: 'medico' }
             ],
             order: [['fecha_hora', 'ASC']]
         });
+
+        if (buscar) {
+            turnos = turnos.filter(t => {
+                const p = t.paciente || {};
+                const m = t.medico || {};
+                const pacienteStr = `${p.nombre || ''} ${p.apellido || ''}`.toLowerCase();
+                const medicoStr = `${m.nombre || ''} ${m.apellido || ''}`.toLowerCase();
+                
+                return pacienteStr.includes(buscar) || medicoStr.includes(buscar);
+            });
+        }
+
         res.render('turnos/index', {
             turnos: turnos,
+            buscar: buscar,
             success: req.flash('success'),
             error: req.flash('error')
         });

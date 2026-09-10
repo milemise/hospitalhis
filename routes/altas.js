@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const altasController = require('../controllers/altasController');
+const altaController = require('../controllers/altaController');
 
 const isAuthenticated = (req, res, next) => {
     if (req.isAuthenticated()) {
@@ -9,19 +9,10 @@ const isAuthenticated = (req, res, next) => {
     req.flash('error', 'Acceso denegado. Por favor, inicia sesión.');
     res.redirect('/auth/login');
 };
-const isAuthorizedForAltas = (req, res, next) => {
-    if (req.isAuthenticated() && (req.user.rol === 'admin' || req.user.rol === 'medico' || req.user.rol === 'enfermero')) {
-        return next();
-    }
-    req.flash('error', 'Acceso denegado.');
-    res.redirect('/');
-};
 
 router.use(isAuthenticated);
-router.use(isAuthorizedForAltas);
 
-router.get('/', altasController.listarAltas);
-router.get('/nueva/:id_admision', altasController.formularioNueva); 
-router.post('/', altasController.guardarAlta);
+router.get('/nueva/:id_admision', altaController.formularioNueva);
+router.post('/nueva/:id_admision', altaController.guardarAlta);
 
 module.exports = router;

@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-console.log('✅ routes/usuarios.js cargado y router inicializado.');
 const { Usuario } = require('../models'); 
 const bcrypt = require('bcryptjs'); 
 
@@ -12,25 +11,49 @@ function ensureAuthenticated(req, res, next) {
     res.redirect('/auth/login');
 }
 
-// Ruta para listar todos los usuarios
+function esAdmin(user) {
+    if (!user || !user.rol) return false;
+    const rol = user.rol.toLowerCase().trim();
+    return rol === 'admin' || rol === 'administrador';
+}
+
 router.get('/', ensureAuthenticated, async (req, res) => {
+    if (!esAdmin(req.user)) {
+        req.flash('error', 'No tienes permisos de administrador.');
+        return res.redirect('/');
+    }
     try {
-        const usuarios = await Usuario.findAll(); 
-        res.render('usuarios/index', { title: 'Gestión de Usuarios', usuarios: usuarios });
+        const buscar = (req.query.buscar || '').toLowerCase().trim();
+        let usuarios = await Usuario.findAll(); 
+
+        if (buscar) {
+            usuarios = usuarios.filter(u => {
+                const nombre = (u.nombre_usuario || '').toLowerCase();
+                const email = (u.email || '').toLowerCase();
+                const rol = (u.rol || '').toLowerCase();
+                
+                return nombre.includes(buscar) || email.includes(buscar) || rol.includes(buscar);
+            });
+        }
+
+        res.render('usuarios/index', { title: 'Gestión de Usuarios', usuarios, buscar });
     } catch (error) {
-        console.error('Error al listar usuarios:', error);
+        console.error(error);
         req.flash('error', 'No se pudieron cargar los usuarios.');
-        res.redirect('/error'); 
+        res.redirect('/'); 
     }
 });
 
-// Ruta para mostrar el formulario de crear nuevo usuario
 router.get('/nuevo', ensureAuthenticated, (req, res) => {
+    if (!esAdmin(req.user)) {
+        req.flash('error', 'No autorizado.');
+        return res.redirect('/');
+    }
     res.render('usuarios/nuevo', { title: 'Crear Nuevo Usuario' });
 });
 
-// Ruta para procesar la creación de un nuevo usuario
 router.post('/', ensureAuthenticated, async (req, res) => {
+    if (!esAdmin(req.user)) return res.redirect('/');
     const { nombre_usuario, email, password, rol } = req.body;
     try {
         const existingUser = await Usuario.findOne({ where: { email: email } });
@@ -39,7 +62,7 @@ router.post('/', ensureAuthenticated, async (req, res) => {
             return res.redirect('/usuarios/nuevo');
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10); // Hashear la contraseña
+        const hashedPassword = await bcrypt.hash(password, 10);
         await Usuario.create({
             nombre_usuario,
             email,
@@ -47,76 +70,89 @@ router.post('/', ensureAuthenticated, async (req, res) => {
             rol
         });
         req.flash('success', 'Usuario creado exitosamente.');
-        res.redirect('/usuarios'); // Redirigir a la lista de usuarios
+        res.redirect('/usuarios');
     } catch (error) {
-        console.error('Error al crear usuario:', error);
+        console.error(error);
         req.flash('error', 'Error al crear usuario. Verifique los datos.');
         res.redirect('/usuarios/nuevo');
     }
 });
 
-// Ruta para mostrar el formulario de edición de un usuario
 router.get('/editar/:id', ensureAuthenticated, async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (!esAdmin(req.user) && req.user.id_usuario !== id) {
+        req.flash('error', 'No tienes permiso para editar este perfil.');
+        return res.redirect('/');
+    }
+    try {
+        const usuario = await Usuario.findByPk(id);
+        if (!usuario) {
+            req.flash('error', 'Usuario no encontrado.');
+            return res.redirect('/');
+        }
+        res.render('usuarios/editar', { title: 'Editar Usuario', usuario });
+    } catch (error) {
+        console.error(error);
+        req.flash('error', 'No se pudo cargar el usuario.');
+        res.redirect('/');
+    }
+});
+
+router.post('/actualizar/:id', ensureAuthenticated, async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (!esAdmin(req.user) && req.user.id_usuario !== id) {
+        req.flash('error', 'No autorizado.');
+        return res.redirect('/');
+    }
+    const { nombre_usuario, email, rol, password } = req.body; 
+    try {
+        const usuario = await Usuario.findByPk(id);
+        if (!usuario) {
+            req.flash('error', 'Usuario no encontrado.');
+            return res.redirect('/');
+        }
+
+        usuario.nombre_usuario = nombre_usuario;
+        usuario.email = email;
+        
+        if (esAdmin(req.user) && rol) {
+            usuario.rol = rol;
+        }
+
+        if (password && password.trim() !== '') {
+            usuario.password_hash = await bcrypt.hash(password, 10);
+        }
+
+        await usuario.save();
+        req.flash('success', 'Datos actualizados exitosamente.');
+        
+        res.redirect(esAdmin(req.user) ? '/usuarios' : '/');
+    } catch (error) {
+        console.error(error);
+        req.flash('error', 'Error al actualizar. Verifique los datos.');
+        res.redirect(`/usuarios/editar/${id}`);
+    }
+});
+
+router.post('/eliminar/:id', ensureAuthenticated, async (req, res) => {
+    if (!esAdmin(req.user)) {
+        req.flash('error', 'No autorizado.');
+        return res.redirect('/');
+    }
     try {
         const usuario = await Usuario.findByPk(req.params.id);
         if (!usuario) {
             req.flash('error', 'Usuario no encontrado.');
             return res.redirect('/usuarios');
         }
-        res.render('usuarios/editar', { title: 'Editar Usuario', usuario: usuario });
-    } catch (error) {
-        console.error('Error al cargar usuario para edición:', error);
-        req.flash('error', 'No se pudo cargar el usuario para edición.');
-        res.redirect('/usuarios');
-    }
-});
-
-// Ruta para procesar la actualización de un usuario
-router.post('/actualizar/:id', ensureAuthenticated, async (req, res) => {
-    const { nombre_usuario, email, rol, password } = req.body; 
-    try {
-        const usuario = await Usuario.findByPk(req.params.id);
-        if (!usuario) {
-            req.flash('error', 'Usuario no encontrado para actualizar.');
-            return res.redirect('/usuarios');
-        }
-
-        // Actualizar datos del usuario
-        usuario.nombre_usuario = nombre_usuario;
-        usuario.email = email;
-        usuario.rol = rol;
-        // Si se proporciona una nueva contraseña, hashearla y actualizarla
-        if (password) {
-            usuario.password_hash = await bcrypt.hash(password, 10);
-        }
-
-        await usuario.save(); // Guardar los cambios
-        req.flash('success', 'Usuario actualizado exitosamente.');
-        res.redirect('/usuarios');
-    } catch (error) {
-        console.error('Error al actualizar usuario:', error);
-        req.flash('error', 'Error al actualizar usuario. Verifique los datos.');
-        res.redirect(`/usuarios/editar/${req.params.id}`);
-    }
-});
-
-// Ruta para procesar la eliminación de un usuario
-router.post('/eliminar/:id', ensureAuthenticated, async (req, res) => {
-    try {
-        const usuario = await Usuario.findByPk(req.params.id);
-        if (!usuario) {
-            req.flash('error', 'Usuario no encontrado para eliminar.');
-            return res.redirect('/usuarios');
-        }
-        await usuario.destroy(); // Eliminar el usuario
+        await usuario.destroy();
         req.flash('success', 'Usuario eliminado exitosamente.');
         res.redirect('/usuarios');
     } catch (error) {
-        console.error('Error al eliminar usuario:', error);
+        console.error(error);
         req.flash('error', 'Error al eliminar usuario.');
         res.redirect('/usuarios');
     }
 });
-
 
 module.exports = router;

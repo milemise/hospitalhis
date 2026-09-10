@@ -1,78 +1,96 @@
 const { Medico, Especialidad } = require('../models');
+const { Op } = require('sequelize');
 
 exports.listarMedicos = async (req, res) => {
     try {
-        const medicos = await Medico.findAll({
-            include: [{ model: Especialidad, as: 'especialidad' }]
+        const buscar = (req.query.buscar || '').toLowerCase().trim();
+        let medicos = await Medico.findAll({
+            include: [{ model: Especialidad, as: 'especialidad' }],
+            order: [['apellido', 'ASC']]
         });
+
+        if (buscar) {
+            medicos = medicos.filter(m => {
+                const nombreCompleto = `${m.nombre || ''} ${m.apellido || ''}`.toLowerCase();
+                const matricula = (m.matricula || '').toLowerCase();
+                const dni = (m.dni || '').toLowerCase();
+                const esp = m.especialidad ? m.especialidad.nombre.toLowerCase() : '';
+                return nombreCompleto.includes(buscar) || matricula.includes(buscar) || dni.includes(buscar) || esp.includes(buscar);
+            });
+        }
+
         res.render('medicos/index', {
-            medicos: medicos,
+            medicos,
+            buscar,
             success: req.flash('success'),
             error: req.flash('error')
         });
     } catch (error) {
-        console.error('Error al listar médicos:', error);
-        req.flash('error', 'Error al cargar la lista de médicos.');
+        req.flash('error', 'Error al listar el plantel médico.');
         res.redirect('/');
     }
 };
 
-exports.formularioNueva = async (req, res) => {
+exports.formularioNuevo = async (req, res) => {
     try {
-        const especialidades = await Especialidad.findAll();
+        const especialidades = await Especialidad.findAll({ order: [['nombre', 'ASC']] });
         res.render('medicos/nuevo', {
-            especialidades: especialidades,
+            especialidades,
             success: req.flash('success'),
             error: req.flash('error')
         });
     } catch (error) {
-        console.error('Error al cargar formulario de nuevo médico:', error);
-        req.flash('error', 'Error al preparar el formulario de médico.');
+        req.flash('error', 'Error al preparar el formulario.');
         res.redirect('/medicos');
     }
 };
 
 exports.guardarMedico = async (req, res) => {
     try {
-        const { nombre, apellido, id_especialidad, matricula, telefono, email } = req.body;
-        if (!nombre || !apellido || !id_especialidad || !matricula || !email) {
-            throw new Error('Faltan campos obligatorios para el médico (Nombre, Apellido, Especialidad, Matrícula, Email).');
+        const { dni, nombre, apellido, fecha_nacimiento, genero, telefono, email, direccion, matricula, id_especialidad } = req.body;
+
+        if (!nombre || !apellido || !matricula) {
+            throw new Error('Faltan campos obligatorios (Nombre, Apellido, Matrícula).');
         }
-        await Medico.create({ nombre, apellido, id_especialidad, matricula, telefono, email, activo: true });
-        req.flash('success', 'Médico creado con éxito.');
+
+        await Medico.create({
+            dni: dni || null,
+            nombre,
+            apellido,
+            fecha_nacimiento: fecha_nacimiento || null,
+            genero: genero || null,
+            telefono: telefono || null,
+            email: email || null,
+            direccion: direccion || null,
+            matricula,
+            id_especialidad: id_especialidad || null,
+            activo: true
+        });
+
+        req.flash('success', 'Médico registrado con éxito en la base de datos.');
         res.redirect('/medicos');
     } catch (error) {
-        console.error('Error al guardar médico:', error);
-        let errorMessage = 'Error al crear el médico.';
-        if (error.name === 'SequelizeUniqueConstraintError') {
-            errorMessage = `Ya existe un médico con la matrícula ${req.body.matricula} o el email ${req.body.email}.`;
-        } else {
-            errorMessage = error.message || errorMessage;
-        }
-        req.flash('error', errorMessage);
+        req.flash('error', 'Error al guardar el médico: ' + error.message);
         res.redirect('/medicos/nuevo');
     }
 };
 
 exports.formularioEditar = async (req, res) => {
     try {
-        const medico = await Medico.findByPk(req.params.id, {
-            include: [{ model: Especialidad, as: 'especialidad' }]
-        });
+        const medico = await Medico.findByPk(req.params.id);
         if (!medico) {
             req.flash('error', 'Médico no encontrado.');
             return res.redirect('/medicos');
         }
-        const especialidades = await Especialidad.findAll();
+        const especialidades = await Especialidad.findAll({ order: [['nombre', 'ASC']] });
         res.render('medicos/editar', {
-            medico: medico,
-            especialidades: especialidades,
+            medico,
+            especialidades,
             success: req.flash('success'),
             error: req.flash('error')
         });
     } catch (error) {
-        console.error('Error al cargar formulario de edición de médico:', error);
-        req.flash('error', 'Error al preparar el formulario de edición de médico.');
+        req.flash('error', 'Error al cargar el médico para editar.');
         res.redirect('/medicos');
     }
 };
@@ -80,44 +98,46 @@ exports.formularioEditar = async (req, res) => {
 exports.actualizarMedico = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, apellido, id_especialidad, matricula, telefono, email, activo } = req.body;
-        if (!nombre || !apellido || !id_especialidad || !matricula || !email) {
-            throw new Error('Faltan campos obligatorios para el médico.');
-        }
+        const { dni, nombre, apellido, fecha_nacimiento, genero, telefono, email, direccion, matricula, id_especialidad, activo } = req.body;
+
         const medico = await Medico.findByPk(id);
         if (!medico) {
             throw new Error('Médico no encontrado.');
         }
-        await medico.update({ nombre, apellido, id_especialidad, matricula, telefono, email, activo: activo === 'on' ? true : false });
-        req.flash('success', 'Médico actualizado con éxito.');
+
+        await medico.update({
+            dni: dni || null,
+            nombre,
+            apellido,
+            fecha_nacimiento: fecha_nacimiento || null,
+            genero: genero || null,
+            telefono: telefono || null,
+            email: email || null,
+            direccion: direccion || null,
+            matricula,
+            id_especialidad: id_especialidad || null,
+            activo: activo === 'on'
+        });
+
+        req.flash('success', 'Datos del médico actualizados con éxito.');
         res.redirect('/medicos');
     } catch (error) {
-        console.error('Error al actualizar médico:', error);
-        let errorMessage = 'Error al actualizar el médico.';
-        if (error.name === 'SequelizeUniqueConstraintError') {
-            errorMessage = `Ya existe otro médico con la matrícula ${req.body.matricula} o el email ${req.body.email}.`;
-        } else {
-            errorMessage = error.message || errorMessage;
-        }
-        req.flash('error', errorMessage);
-        res.redirect(`/medicos/editar/${req.params.id}`);
+        req.flash('error', 'Error al actualizar: ' + error.message);
+        res.redirect('/medicos/editar/' + req.params.id);
     }
 };
 
 exports.eliminarMedico = async (req, res) => {
     try {
-        const { id } = req.params;
-        const medico = await Medico.findByPk(id);
-        if (!medico) {
-            throw new Error('Médico no encontrado.');
+        const medico = await Medico.findByPk(req.params.id);
+        if (medico) {
+            medico.activo = !medico.activo;
+            await medico.save();
+            req.flash('success', 'Estado del médico actualizado.');
         }
-   
-        await medico.destroy(); 
-        req.flash('success', 'Médico eliminado con éxito.');
         res.redirect('/medicos');
     } catch (error) {
-        console.error('Error al eliminar médico:', error);
-        req.flash('error', `Error al eliminar el médico: ${error.message}`);
+        req.flash('error', 'No se pudo cambiar el estado del médico.');
         res.redirect('/medicos');
     }
 };

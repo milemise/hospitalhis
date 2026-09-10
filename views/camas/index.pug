@@ -1,53 +1,262 @@
 extends ../layout
 
 block content
-  .container.mt-4
-    .card.shadow-lg.p-4
-      .card-header.bg-primary.text-white.py-3
-        .d-flex.justify-content-between.align-items-center
-          h1.h4.mb-0 Gestión de Camas
-          a.btn.btn-info.text-white(href="/camas/nuevo")
-            i.fas.fa-plus-lg.me-1
-            | Nueva Cama
-      .card-body
-        if camas.length === 0
-          .alert.alert-info.mb-0 No hay camas registradas en el sistema.
+  style.
+    .cama-box { transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+    .cama-box:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+
+  .container-fluid.mt-4
+    if error && error.length > 0
+      .alert.alert-danger.alert-dismissible.fade.show
+        | #{error}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+    if success && success.length > 0
+      .alert.alert-success.alert-dismissible.fade.show
+        | #{success}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+
+    .row
+      .col-md-3.mb-4
+        .card.shadow-sm.border-0.rounded-3.mb-3
+          .card-body.p-4
+            h6.fw-bold.text-uppercase.mb-3 Acciones
+            a.btn.btn-primary.w-100.mb-2.py-2(href="/camas/nueva") 
+              i.fas.fa-plus.me-2
+              span Agregar Cama
+            button.btn.btn-outline-primary.w-100.mb-2.py-2(type="button", data-bs-toggle="modal", data-bs-target="#modalHabitacion") 
+              i.fas.fa-door-open.me-2
+              span Nueva Habitación
+            button.btn.btn-outline-dark.w-100.py-2(type="button", data-bs-toggle="modal", data-bs-target="#modalNuevaAla") 
+              i.fas.fa-building.me-2
+              span Nueva Ala
+
+        .card.shadow-sm.border-0.rounded-3.mb-3
+          .card-body.p-3
+            h6.fw-bold.text-uppercase.mb-3 Disponibilidad
+            .d-grid.gap-2
+              button.btn.btn-outline-dark.btn-sm.filter-btn-disp.active(data-filter="todos") Todas las Camas
+              button.btn.btn-outline-success.btn-sm.filter-btn-disp(data-filter="Libre") Disponibles (Libres)
+              button.btn.btn-outline-danger.btn-sm.filter-btn-disp(data-filter="Ocupada") Ocupadas
+              button.btn.btn-outline-warning.btn-sm.filter-btn-disp(data-filter="En Limpieza") En Limpieza
+              button.btn.btn-outline-secondary.btn-sm.filter-btn-disp(data-filter="Fuera de Servicio") Inactivas
+
+        .card.shadow-sm.border-0.rounded-3
+          .card-body.p-3
+            h6.fw-bold.text-uppercase.mb-3 Asignación (Sexo)
+            .d-grid.gap-2
+              button.btn.btn-outline-dark.btn-sm.filter-btn-sex.active(data-sexo="todos") Todos
+              button.btn.btn-outline-info.btn-sm.filter-btn-sex(data-sexo="Masculino") Hombres
+              button.btn.btn-outline-primary.btn-sm.filter-btn-sex(data-sexo="Femenino") Mujeres
+              button.btn.btn-outline-secondary.btn-sm.filter-btn-sex(data-sexo="Mixto") Mixtas
+
+      .col-md-9
+        form.mb-4(action="/camas", method="GET")
+          .input-group.input-group-lg.shadow-sm
+            input.form-control.border-0(type="text", name="buscar", placeholder="Buscar ala, habitación o cama...", value=buscar)
+            button.btn.btn-primary.px-4(type="submit")
+              i.fas.fa-search
+            if buscar
+              a.btn.btn-light.border(href="/camas") Limpiar
+
+        if alas && alas.length > 0
+          each ala in alas
+            .card.shadow-sm.mb-4.border-0.rounded-3
+              .card-header.bg-dark.text-white.py-3.d-flex.justify-content-between.align-items-center
+                h5.mb-0
+                  i.fas.fa-hospital-alt.me-2
+                  | #{ala.nombre}
+                button.btn.btn-sm.btn-outline-light(type="button", onclick=`abrirModalEditarAla(${ala.id_ala}, '${ala.nombre}')`)
+                  i.fas.fa-edit.me-1
+                  | Editar Nombre
+              
+              .card-body.bg-light
+                .row.g-3
+                  if ala.habitaciones && ala.habitaciones.length > 0
+                    each hab in ala.habitaciones
+                      .col-md-6.col-lg-4.habitacion-item(data-sexo=hab.sexo_asignado || 'Mixto')
+                        .card.h-100.border-0.shadow-sm
+                          .card-header.bg-white.border-bottom.text-center.py-2
+                            h6.mb-0.text-primary.fw-bold Habitación #{hab.numero}
+                            small.text-muted Tipo: #{hab.tipo} | Sexo: #{hab.sexo_asignado || 'Mixto'}
+                          .card-body.p-2.d-flex.flex-wrap.justify-content-center
+                            if hab.camas && hab.camas.length > 0
+                              each cama in hab.camas
+                                - let bedColor = 'text-success'
+                                - let bedBoxClass = 'border-success bg-success-subtle'
+                                if cama.estado === 'Ocupada'
+                                  - bedColor = 'text-danger'
+                                  - bedBoxClass = 'border-danger bg-danger-subtle'
+                                else if cama.estado === 'En Limpieza'
+                                  - bedColor = 'text-warning'
+                                  - bedBoxClass = 'border-warning bg-warning-subtle'
+                                else if cama.estado === 'Fuera de Servicio'
+                                  - bedColor = 'text-secondary'
+                                  - bedBoxClass = 'border-secondary bg-secondary-subtle'
+                                
+                                div.cama-item(data-estado=cama.estado, style="display:inline-block;")
+                                  .p-2.m-1.border.rounded.text-center.cama-box(class=bedBoxClass, style="width: 80px;", onclick=`abrirModalEditarCama(${cama.id_cama}, '${cama.numero}', '${cama.estado}')`, title="Click para cambiar estado")
+                                    i.fas.fa-bed.fa-2x(class=bedColor)
+                                    .mt-1.small.fw-bold #{cama.numero}
+                            else
+                              p.text-muted.small.mt-2 No hay camas registradas
+                  else
+                    .col-12
+                      .alert.alert-secondary.mb-0 Sin habitaciones registradas.
         else
-          .table-responsive
-            table.table.table-striped.table-hover.align-middle.table-bordered
-              thead.table-light
-                tr
-                  th ID
-                  th Habitación
-                  th Ala
-                  th Número
-                  th Estado
-                  th Género Asignado
-                  th Paciente Asignado
-                  th.text-center Acciones
-              tbody
-                each cama in camas
-                  tr
-                    td #{cama.id_cama}
-                    td #{cama.habitacion ? cama.habitacion.numero : 'N/A'}
-                    td #{cama.habitacion && cama.habitacion.ala ? cama.habitacion.ala.nombre : 'N/A'}
-                    td #{cama.numero}
-                    td
-                      - const estadoClass = cama.estado === 'Libre' ? 'bg-success' : cama.estado === 'Ocupada' ? 'bg-danger' : cama.estado === 'En Limpieza' ? 'bg-warning text-dark' : 'bg-secondary'
-                      span(class=`badge ${estadoClass}`) #{cama.estado}
-                    td
-                      if cama.genero_asignado
-                        | #{cama.genero_asignado === 'M' ? 'Masculino' : 'Femenino'}
-                      else
-                        span.text-muted Mixto/Individual
-                    td
-                      - const asignacionActiva = cama.asignaciones && cama.asignaciones.find(a => a.admision && a.admision.estado === 'Activo');
-                      if asignacionActiva && asignacionActiva.admision.paciente
-                        a(href="/admisiones/detalles/" + asignacionActiva.admision.id_admision)= asignacionActiva.admision.paciente.nombre + ' ' + asignacionActiva.admision.paciente.apellido
-                      else
-                        span.text-muted N/A
-                    td.text-center
-                      .d-inline-flex.gap-2
-                        a.btn.btn-sm.btn-outline-primary(href="/camas/editar/" + cama.id_cama) Editar
-                        form(action="/camas/eliminar/" + cama.id_cama, method="POST", onsubmit="return confirm('¿Está seguro de eliminar esta cama? Esto no es posible si está asignada.');")
-                          button.btn.btn-sm.btn-outline-danger(type="submit") Eliminar
+          .alert.alert-info No se encontraron resultados.
+
+  .modal.fade#modalEditarCama(tabindex="-1")
+    .modal-dialog.modal-dialog-centered.modal-sm
+      .modal-content.border-0.shadow
+        .modal-header.bg-warning.text-dark
+          h5.modal-title Editar Cama
+          button.btn-close(type="button", data-bs-dismiss="modal")
+        form#formEditarCama(method="POST")
+          .modal-body.text-center
+            p.mb-2 Cama seleccionada:
+            h4.fw-bold.text-primary#spanNumeroCama
+            .mb-3.mt-3.text-start
+              label.form-label Estado Actual
+              select.form-select#selectEstadoCama(name="estado", required)
+                option(value="Libre") Libre (Disponible)
+                option(value="Ocupada") Ocupada
+                option(value="En Limpieza") En Limpieza
+                option(value="Fuera de Servicio") Fuera de Servicio
+          .modal-footer.bg-light
+            button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Cancelar
+            button.btn.btn-warning(type="submit") Guardar
+
+  .modal.fade#modalHabitacion(tabindex="-1")
+    .modal-dialog
+      .modal-content
+        .modal-header.bg-primary.text-white
+          h5.modal-title Crear Nueva Habitación
+          button.btn-close.btn-close-white(type="button", data-bs-dismiss="modal")
+        form(action="/camas/habitacion", method="POST")
+          .modal-body
+            .mb-3
+              label.form-label Ala
+              select.form-select(name="id_ala", required)
+                option(value="", disabled, selected) Seleccione el Ala...
+                if alasDisponibles
+                  each a in alasDisponibles
+                    option(value=a.id_ala) #{a.nombre}
+            .mb-3
+              label.form-label Número de Habitación
+              input.form-control(type="text", name="numero", required, placeholder="Ej: 101, 204B")
+            .mb-3
+              label.form-label Tipo
+              select.form-select(name="tipo", required)
+                option(value="Individual") Individual
+                option(value="Compartida") Compartida
+                option(value="Suite") Suite
+            .mb-3
+              label.form-label Asignación por Sexo
+              select.form-select(name="sexo_asignado", required)
+                option(value="Mixto") Mixto (Por defecto)
+                option(value="Masculino") Solo Hombres
+                option(value="Femenino") Solo Mujeres
+          .modal-footer
+            button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Cancelar
+            button.btn.btn-primary(type="submit") Guardar Habitación
+
+  .modal.fade#modalNuevaAla(tabindex="-1")
+    .modal-dialog
+      .modal-content
+        .modal-header.bg-dark.text-white
+          h5.modal-title Registrar Nueva Ala
+          button.btn-close.btn-close-white(type="button", data-bs-dismiss="modal")
+        form(action="/camas/ala", method="POST")
+          .modal-body
+            .mb-3
+              label.form-label Nombre del Ala
+              input.form-control(type="text", name="nombre", required, placeholder="Ej: Ala E - Pediatría Avanzada")
+          .modal-footer
+            button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Cancelar
+            button.btn.btn-dark(type="submit") Crear Ala
+
+  .modal.fade#modalEditarAla(tabindex="-1")
+    .modal-dialog
+      .modal-content
+        .modal-header.bg-secondary.text-white
+          h5.modal-title Editar Nombre del Ala
+          button.btn-close.btn-close-white(type="button", data-bs-dismiss="modal")
+        form#formEditarAla(method="POST")
+          .modal-body
+            .mb-3
+              label.form-label Nuevo Nombre
+              input.form-control#inputNombreAla(type="text", name="nombre", required)
+          .modal-footer
+            button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Cancelar
+            button.btn.btn-success(type="submit") Guardar Cambios
+
+  script.
+    function abrirModalEditarAla(id_ala, nombre_actual) {
+      document.getElementById('formEditarAla').action = '/camas/ala/actualizar/' + id_ala;
+      document.getElementById('inputNombreAla').value = nombre_actual;
+      var modal = new bootstrap.Modal(document.getElementById('modalEditarAla'));
+      modal.show();
+    }
+
+    function abrirModalEditarCama(id_cama, numero_cama, estado_actual) {
+      document.getElementById('formEditarCama').action = '/camas/actualizar-estado/' + id_cama;
+      document.getElementById('spanNumeroCama').textContent = numero_cama;
+      document.getElementById('selectEstadoCama').value = estado_actual;
+      var modal = new bootstrap.Modal(document.getElementById('modalEditarCama'));
+      modal.show();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const filterBtnsDisp = document.querySelectorAll('.filter-btn-disp');
+      const filterBtnsSex = document.querySelectorAll('.filter-btn-sex');
+      const habitacionItems = document.querySelectorAll('.habitacion-item');
+
+      let currentDisp = 'todos';
+      let currentSex = 'todos';
+
+      const applyFilters = () => {
+        habitacionItems.forEach(hab => {
+          const habSex = hab.getAttribute('data-sexo') || 'Mixto';
+          const matchSex = currentSex === 'todos' || habSex === currentSex;
+          let hasVisibleBeds = false;
+          
+          const camas = hab.querySelectorAll('.cama-item');
+
+          camas.forEach(cama => {
+            const camaDisp = cama.getAttribute('data-estado');
+            const matchDisp = currentDisp === 'todos' || camaDisp === currentDisp;
+            
+            if (matchDisp && matchSex) {
+              cama.style.display = 'inline-block';
+              hasVisibleBeds = true;
+            } else {
+              cama.style.display = 'none';
+            }
+          });
+
+          if (matchSex && (hasVisibleBeds || (camas.length === 0 && currentDisp === 'todos'))) {
+            hab.style.display = '';
+          } else {
+            hab.style.display = 'none';
+          }
+        });
+      };
+
+      filterBtnsDisp.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          filterBtnsDisp.forEach(b => b.classList.remove('active', 'text-white'));
+          e.target.classList.add('active');
+          currentDisp = e.target.getAttribute('data-filter');
+          applyFilters();
+        });
+      });
+
+      filterBtnsSex.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          filterBtnsSex.forEach(b => b.classList.remove('active', 'text-white'));
+          e.target.classList.add('active');
+          currentSex = e.target.getAttribute('data-sexo');
+          applyFilters();
+        });
+      });
+    });

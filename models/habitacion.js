@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('./sequelize');
+const sequelize = require('../config/db');
 
 const Habitacion = sequelize.define('Habitacion', {
   id_habitacion: {
@@ -8,30 +8,25 @@ const Habitacion = sequelize.define('Habitacion', {
     autoIncrement: true,
     allowNull: false
   },
+  id_ala: {
+    type: DataTypes.INTEGER,
+    allowNull: false
+  },
   numero: {
-    type: DataTypes.STRING(10),
+    type: DataTypes.STRING(50),
     allowNull: false
   },
   tipo: {
-    type: DataTypes.ENUM('Individual', 'Compartida', 'Suite'),
+    type: DataTypes.STRING(50),
     allowNull: false
   },
-  estado: {
-    type: DataTypes.ENUM('Disponible', 'Ocupada', 'Mantenimiento', 'Limpieza'),
-    allowNull: false,
-    defaultValue: 'Disponible'
-  },
-  id_ala: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'ala', 
-      key: 'id_ala'
-    }
+  sexo_asignado: {
+    type: DataTypes.STRING(20),
+    defaultValue: 'Mixto'
   }
 }, {
   tableName: 'habitaciones',
-  timestamps: false 
+  timestamps: false
 });
 
 module.exports = Habitacion;

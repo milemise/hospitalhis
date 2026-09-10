@@ -1,0 +1,68 @@
+extends ../layout
+
+block content
+  .container.mt-4
+    .card.shadow-sm.border-0.rounded-3
+      .card-header.bg-primary.text-white.py-3
+        h4.mb-0
+          i.fas.fa-user-injured.me-2
+          | Detalles del Paciente
+      .card-body.p-4
+        .row.mb-4
+          .col-md-6
+            h5.text-secondary Datos Personales
+            p
+              strong Nombre: 
+              | #{paciente.nombre} #{paciente.apellido}
+            p
+              strong DNI: 
+              | #{paciente.dni}
+            p
+              strong Género: 
+              | #{paciente.genero}
+            p
+              strong Fecha de Nacimiento: 
+              | #{new Date(paciente.fecha_nacimiento).toLocaleDateString('es-ES')}
+          .col-md-6
+            h5.text-secondary Información de Contacto
+            p
+              strong Teléfono: 
+              | #{paciente.telefono || 'No especificado'}
+            p
+              strong Email: 
+              | #{paciente.email || 'No especificado'}
+            p
+              strong Dirección: 
+              | #{paciente.direccion || 'No especificada'}
+            p
+              strong Grupo Sanguíneo: 
+              | #{paciente.grupo_sanguineo || 'No especificado'}
+
+        hr
+
+        h5.text-secondary.mt-4 Estado de Internación Actual
+        if admision
+          .alert.alert-warning
+            h6.alert-heading
+              i.fas.fa-procedures.me-2
+              | Paciente actualmente internado
+            hr
+            p.mb-1
+              strong Fecha de Ingreso: 
+              | #{new Date(admision.fecha_ingreso).toLocaleString('es-ES')}
+            p.mb-1
+              strong Motivo: 
+              | #{admision.motivo_internacion}
+            p.mb-0
+              strong Ubicación: 
+              if admision.cama && admision.cama.habitacion
+                | Ala #{admision.cama.habitacion.ala.nombre} - Habitación #{admision.cama.habitacion.numero} - Cama #{admision.cama.numero}
+              else
+                | Sin cama asignada
+        else
+          .alert.alert-secondary
+            i.fas.fa-info-circle.me-2
+            | Este paciente no se encuentra internado actualmente en el sistema.
+
+      .card-footer.bg-light.text-end
+        a.btn.btn-secondary(href="/pacientes") Volver a la Lista

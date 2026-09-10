@@ -1,73 +1,81 @@
 extends ../layout
 
 block content
-  .row.justify-content-center
-    .col-md-10.col-lg-8
-      .card.shadow-sm.my-5
-        .card-header.bg-primary.text-white.py-3
-          h1.h4.mb-0 Editar Paciente: #{paciente.nombre} #{paciente.apellido}
-        form(action="/pacientes/actualizar/" + paciente.id_paciente, method="POST")
-          .card-body.p-4
-            .row.g-3
-              .col-md-6
-                label.form-label(for="nombre") Nombre
-                input.form-control#nombre(type="text", name="nombre", value=paciente.nombre, required)
-              .col-md-6
-                label.form-label(for="apellido") Apellido
-                input.form-control#apellido(type="text", name="apellido", value=paciente.apellido, required)
-              .col-md-6
-                label.form-label(for="dni") DNI
-                input.form-control#dni(type="text", name="dni", value=paciente.dni, required)
-              .col-md-6
-                label.form-label(for="fecha_nacimiento") Fecha de Nacimiento
-                input.form-control#fecha_nacimiento(type="date", name="fecha_nacimiento", value=paciente.fecha_nacimiento ? new Date(paciente.fecha_nacimiento).toISOString().split('T')[0] : '', required)
-              .col-md-6
-                label.form-label(for="genero") Género
-                select.form-select#genero(name="genero", required)
-                  option(value="Masculino", selected=(paciente.genero === 'Masculino')) Masculino
-                  option(value="Femenino", selected=(paciente.genero === 'Femenino')) Femenino
-                  option(value="Otro", selected=(paciente.genero === 'Otro')) Otro
-                  option(value="No especificado", selected=(paciente.genero === 'No especificado')) No especificado
-              .col-md-6
-                label.form-label(for="telefono") Teléfono (Opcional)
-                input.form-control#telefono(type="text", name="telefono", value=paciente.telefono || '')
-              .col-md-6
-                label.form-label(for="email") Email (Opcional)
-                input.form-control#email(type="email", name="email", value=paciente.email || '')
-              .col-md-6
-                label.form-label(for="direccion") Dirección (Opcional)
-                input.form-control#direccion(type="text", name="direccion", value=paciente.direccion || '')
-              .col-md-6
-                label.form-label(for="grupo_sanguineo") Grupo Sanguíneo (Opcional)
-                select.form-select#grupo_sanguineo(name="grupo_sanguineo")
-                  option(value="", selected=(!paciente.grupo_sanguineo)) Seleccionar
-                  option(value="A+", selected=(paciente.grupo_sanguineo === 'A+')) A+
-                  option(value="A-", selected=(paciente.grupo_sanguineo === 'A-')) A-
-                  option(value="B+", selected=(paciente.grupo_sanguineo === 'B+')) B+
-                  option(value="B-", selected=(paciente.grupo_sanguineo === 'B-')) B-
-                  option(value="AB+", selected=(paciente.grupo_sanguineo === 'AB+')) AB+
-                  option(value="AB-", selected=(paciente.grupo_sanguineo === 'AB-')) AB-
-                  option(value="O+", selected=(paciente.grupo_sanguineo === 'O+')) O+
-                  option(value="O-", selected=(paciente.grupo_sanguineo === 'O-')) O-
-              .col-md-6
-                label.form-label(for="id_obra_social") Obra Social (Opcional)
-                select.form-select#id_obra_social(name="id_obra_social")
-                  option(value="", selected=(!paciente.id_obra_social)) Seleccionar Obra Social
-                  each os in obrasSociales
-                    option(value=os.id_obra_social, selected=(os.id_obra_social === paciente.id_obra_social))= os.nombre
-              .col-md-6
-                label.form-label(for="numero_afiliado") Número de Afiliado (Opcional)
-                input.form-control#numero_afiliado(type="text", name="numero_afiliado", value=paciente.numero_afiliado || '')
-              .col-md-6
-                label.form-label(for="alergias") Alergias (Opcional)
-                textarea.form-control#alergias(name="alergias", rows="2")= paciente.alergias || ''
-              .col-md-6
-                label.form-label(for="medicamentos_actuales") Medicamentos Actuales (Opcional)
-                textarea.form-control#medicamentos_actuales(name="medicamentos_actuales", rows="2")= paciente.medicamentos_actuales || ''
-              .col-12
-                .form-check.form-switch.pt-2
-                  input.form-check-input#activo(type="checkbox", name="activo", checked=paciente.activo)
-                  label.form-check-label(for="activo") Paciente Activo
-          .card-footer.text-end.bg-light
-            a.btn.btn-secondary(href="/pacientes") Cancelar
-            button.btn.btn-primary.ms-2(type="submit") Actualizar Paciente
+  .container.mt-4
+    if error && error.length > 0
+      .alert.alert-danger.alert-dismissible.fade.show
+        | #{error}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+    
+    .alert.alert-warning.shadow-sm.border-0
+      i.fas.fa-exclamation-triangle.me-2
+      | #[strong Módulo Administrativo:] Para editar información médica, recetas, alergias o registrar signos vitales, dirígete a la 
+      a.fw-bold(href=`/pacientes/historia/${paciente.id_paciente}`) Historia Clínica
+      |  del paciente.
+    
+    .card.shadow-sm.border-0.rounded-3
+      .card-header.bg-primary.text-white.py-3
+        h4.mb-0 Editar Datos Demográficos: #{paciente.nombre} #{paciente.apellido}
+      
+      .card-body.p-4
+        form(action=`/pacientes/actualizar/${paciente.id_paciente}`, method="POST")
+          .row.g-3
+            .col-md-6
+              label.form-label.fw-bold Nombre
+              input.form-control(type="text", name="nombre", value=paciente.nombre, required)
+            
+            .col-md-6
+              label.form-label.fw-bold Apellido
+              input.form-control(type="text", name="apellido", value=paciente.apellido, required)
+            
+            .col-md-6
+              label.form-label.fw-bold DNI
+              input.form-control(type="text", name="dni", value=paciente.dni, required)
+            
+            .col-md-6
+              label.form-label.fw-bold Fecha de Nacimiento
+              - let fechaFormateada = ''
+              - if (paciente.fecha_nacimiento) {
+              -   try { fechaFormateada = new Date(paciente.fecha_nacimiento).toISOString().split('T')[0]; } catch(e) { fechaFormateada = paciente.fecha_nacimiento; }
+              - }
+              input.form-control(type="date", name="fecha_nacimiento", value=fechaFormateada, required)
+            
+            .col-md-6
+              label.form-label.fw-bold Género
+              select.form-select(name="genero", required)
+                option(value="Masculino", selected=paciente.genero==='Masculino') Masculino
+                option(value="Femenino", selected=paciente.genero==='Femenino') Femenino
+                option(value="Otro", selected=paciente.genero==='Otro') Otro
+            
+            .col-md-6
+              label.form-label.fw-bold Teléfono (Opcional)
+              input.form-control(type="text", name="telefono", value=paciente.telefono)
+            
+            .col-md-6
+              label.form-label.fw-bold Email (Opcional)
+              input.form-control(type="email", name="email", value=paciente.email)
+            
+            .col-md-6
+              label.form-label.fw-bold Dirección (Opcional)
+              input.form-control(type="text", name="direccion", value=paciente.direccion)
+            
+            .col-md-6
+              label.form-label.fw-bold Obra Social (Opcional)
+              select.form-select(name="id_obra_social")
+                option(value="") Particular
+                if obrasSociales
+                  each obra in obrasSociales
+                    option(value=obra.id_obra_social, selected=paciente.id_obra_social===obra.id_obra_social) #{obra.nombre}
+            
+            .col-md-6
+              label.form-label.fw-bold Número de Afiliado (Opcional)
+              input.form-control(type="text", name="numero_afiliado", value=paciente.numero_afiliado)
+            
+            .col-12.mt-4
+              .form-check.form-switch
+                input.form-check-input#switchActivo(type="checkbox", name="activo", checked=paciente.activo !== false)
+                label.form-check-label.fw-bold(for="switchActivo") Paciente Activo en el Sistema
+          
+          .card-footer.bg-white.text-end.mt-4.pb-0.pe-0.border-0
+            a.btn.btn-secondary.me-2(href="/pacientes") Cancelar
+            button.btn.btn-primary(type="submit") Actualizar Datos

@@ -9,22 +9,18 @@ const isAuthenticated = (req, res, next) => {
     req.flash('error', 'Acceso denegado. Por favor, inicia sesión.');
     res.redirect('/auth/login');
 };
-const isAdmin = (req, res, next) => {
-    if (req.isAuthenticated() && req.user.rol === 'admin') {
-        return next();
-    }
-    req.flash('error', 'Acceso denegado. Solo administradores.');
-    res.redirect('/');
-};
 
 router.use(isAuthenticated);
-router.use(isAdmin); 
 
 router.get('/', camaController.listarCamas);
-router.get('/nuevo', camaController.formularioNueva);
+router.get('/nueva', camaController.formularioNueva);
 router.post('/', camaController.guardarCama);
-router.get('/editar/:id', camaController.formularioEditar);
-router.post('/actualizar/:id', camaController.actualizarCama);
-router.post('/eliminar/:id', camaController.eliminarCama);
+router.post('/habitacion', camaController.guardarHabitacion);
+router.post('/ala', camaController.guardarAla);
+router.post('/ala/actualizar/:id_ala', camaController.actualizarAla);
+router.get('/editar/:id_cama', camaController.formularioEditar);
+router.post('/actualizar/:id_cama', camaController.actualizarCama);
+router.post('/eliminar/:id_cama', camaController.eliminarCama);
+router.post('/actualizar-estado/:id', camaController.actualizarEstadoCama);
 
 module.exports = router;

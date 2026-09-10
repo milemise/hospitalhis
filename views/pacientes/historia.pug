@@ -1,0 +1,214 @@
+extends ../layout
+
+block content
+  .container-fluid.mt-4
+    if error && error.length > 0
+      .alert.alert-danger.alert-dismissible.fade.show
+        | #{error}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+    if success && success.length > 0
+      .alert.alert-success.alert-dismissible.fade.show
+        | #{success}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+
+    .d-flex.justify-content-between.align-items-center.mb-4
+      h3.text-primary.fw-bold
+        i.fas.fa-laptop-medical.me-2
+        | Expediente Clínico Digital
+      a.btn.btn-outline-secondary(href="/pacientes") 
+        i.fas.fa-arrow-left.me-1
+        | Volver al Padrón
+
+    .card.shadow-sm.border-0.mb-4.bg-primary.text-white
+      .card-body.p-4
+        .row.align-items-center
+          .col-md-7
+            h4.fw-bold.mb-1 #{paciente.nombre} #{paciente.apellido}
+            p.mb-0.opacity-75 DNI: #{paciente.dni} | Género: #{paciente.genero} | Edad: #{new Date().getFullYear() - new Date(paciente.fecha_nacimiento).getFullYear()} años
+          .col-md-5.text-md-end.mt-3.mt-md-0
+            p.mb-1 #[strong Obra Social:] #{paciente.obraSocial ? paciente.obraSocial.nombre : 'Particular (Sin Cobertura)'}
+            p.mb-0 #[strong N° Afiliado:] #{paciente.numero_afiliado || 'N/A'}
+
+    .row.mb-4
+      .col-md-12
+        .card.shadow-sm.border-0
+          .card-header.bg-white.d-flex.justify-content-between.align-items-center.py-3
+            h6.fw-bold.mb-0.text-dark 
+              i.fas.fa-exclamation-circle.text-warning.me-2
+              | Información Base (Alergias y Medicación Crónica)
+            button.btn.btn-sm.btn-outline-primary(type="button", data-bs-toggle="modal", data-bs-target="#modalMedicacion")
+              i.fas.fa-edit.me-1
+              | Actualizar Info
+          .card-body
+            .row
+              .col-md-3
+                strong Grupo Sanguíneo:
+                p.text-danger.fw-bold.fs-5 #{paciente.grupo_sanguineo || 'No Especificado'}
+              .col-md-4
+                strong Alergias Reportadas:
+                if paciente.alergias
+                  p.text-danger #{paciente.alergias}
+                else
+                  p.text-muted Ninguna conocida
+              .col-md-5
+                strong Medicación Actual (Crónica):
+                if paciente.medicamentos_actuales
+                  p.text-info-emphasis #{paciente.medicamentos_actuales}
+                else
+                  p.text-muted No refiere medicación crónica
+
+    .card.shadow-sm.border-0
+      .card-header.bg-white.pt-3.pb-0.border-bottom-0
+        ul.nav.nav-tabs#clinicalTabs(role="tablist")
+          li.nav-item(role="presentation")
+            button.nav-link.active.fw-bold(id="ambulatorio-tab", data-bs-toggle="tab", data-bs-target="#ambulatorio", type="button", role="tab") 
+              i.fas.fa-stethoscope.me-2
+              | Consultas Ambulatorias
+          li.nav-item(role="presentation")
+            button.nav-link.fw-bold(id="internacion-tab", data-bs-toggle="tab", data-bs-target="#internacion", type="button", role="tab") 
+              i.fas.fa-procedures.me-2
+              | Historial de Internaciones
+
+      .card-body.p-4
+        .tab-content#clinicalTabsContent
+          
+          .tab-pane.fade.show.active#ambulatorio(role="tabpanel")
+            .d-flex.justify-content-between.align-items-center.mb-4
+              h5.mb-0 Registro de Atenciones, Recetas y Enfermería
+              button.btn.btn-success(type="button", data-bs-toggle="modal", data-bs-target="#modalConsulta")
+                i.fas.fa-plus.me-2
+                | Nueva Nota / Consulta
+            
+            if consultas && consultas.length > 0
+              .timeline
+                each consulta in consultas
+                  .card.border-start.border-4.border-primary.mb-3.shadow-sm
+                    .card-body
+                      .d-flex.justify-content-between.mb-2
+                        h6.fw-bold.text-primary.mb-0 #{consulta.tipo}
+                        span.text-muted.small #{new Date(consulta.fecha).toLocaleString('es-ES')}
+                      p.mb-1 #[strong Profesional:] #{consulta.profesional}
+                      p.mb-1 #[strong Motivo:] #{consulta.motivo}
+                      .bg-light.p-2.rounded.mb-2
+                        strong Evolución/Observaciones:
+                        p.mb-0.small #{consulta.observaciones}
+                      if consulta.receta
+                        .bg-white.border.border-info.p-2.rounded
+                          strong.text-info Receta Emitida:
+                          p.mb-0.small #{consulta.receta}
+            else
+              .alert.alert-secondary.text-center.mt-3 No hay consultas ambulatorias ni notas registradas.
+
+          .tab-pane.fade#internacion(role="tabpanel")
+            if paciente.admisiones && paciente.admisiones.length > 0
+              .accordion#accordionHistoria
+                each adm, index in paciente.admisiones
+                  .accordion-item.border.mb-3.shadow-sm
+                    h2.accordion-header(id=`heading${index}`)
+                      button.accordion-button(class=index === 0 ? '' : 'collapsed', type="button", data-bs-toggle="collapse", data-bs-target=`#collapse${index}`)
+                        div.d-flex.w-100.justify-content-between.me-3
+                          span
+                            strong Ingreso: 
+                            | #{new Date(adm.fecha_ingreso).toLocaleDateString('es-ES')}
+                          if adm.estado_admision === 'Dada de Alta'
+                            span.badge.bg-success Alta Médica Registrada
+                          else if adm.estado_admision === 'Cancelada'
+                            span.badge.bg-danger Cancelada
+                          else
+                            span.badge.bg-warning.text-dark Internación Activa
+                    
+                    .accordion-collapse.collapse(id=`collapse${index}`, class=index === 0 ? 'show' : '', data-bs-parent="#accordionHistoria")
+                      .accordion-body.bg-light
+                        .row.mb-3
+                          .col-md-6
+                            p.mb-1 #[strong Motivo de Ingreso:] #{adm.motivo_internacion}
+                          .col-md-6
+                            if adm.alta
+                              p.mb-1 #[strong Fecha de Alta:] #{new Date(adm.fecha_alta).toLocaleDateString('es-ES')}
+                              p.mb-1 #[strong Tipo de Alta:] #{adm.alta.tipo_alta}
+                        
+                        if adm.alta && adm.alta.resumen_epicrisis
+                          .alert.alert-success.border-0.mt-3
+                            h6.fw-bold.text-success 
+                              i.fas.fa-file-medical.me-2
+                              | Epicrisis / Resumen de Alta
+                            p.small.mb-0.mt-2 #{adm.alta.resumen_epicrisis}
+                            hr.my-2
+                            p.small.mb-0 #[strong Médico responsable:] #{adm.alta.medico ? adm.alta.medico.nombre + ' ' + adm.alta.medico.apellido : 'N/A'}
+                        
+                        h6.fw-bold.mt-4.border-bottom.pb-2 Evoluciones durante la Internación
+                        if adm.evaluaciones && adm.evaluaciones.length > 0
+                          .table-responsive
+                            table.table.table-sm.table-bordered.bg-white.align-middle
+                              thead.table-light
+                                tr
+                                  th Fecha
+                                  th Profesional
+                                  th Signos Vitales
+                                  th Observaciones
+                              tbody
+                                each ev in adm.evaluaciones
+                                  tr
+                                    td.small #{new Date(ev.fecha_evaluacion).toLocaleString('es-ES')}
+                                    td.small #{ev.medico ? ev.medico.nombre + ' ' + ev.medico.apellido : 'Enfermería'}
+                                    td.small
+                                      if ev.temperatura || ev.presion_arterial
+                                        span.badge.bg-secondary.me-1 T: #{ev.temperatura}°C
+                                        span.badge.bg-secondary.me-1 PA: #{ev.presion_arterial}
+                                    td.small #{ev.observaciones_medicas}
+                        else
+                          p.small.text-muted No se registraron evaluaciones durante esta estadía.
+            else
+              .alert.alert-info.text-center.mt-3 El paciente no ha tenido internaciones en este hospital.
+
+  .modal.fade#modalMedicacion(tabindex="-1")
+    .modal-dialog.modal-dialog-centered
+      .modal-content
+        .modal-header.bg-warning.text-dark
+          h5.modal-title Actualizar Información Clínica
+          button.btn-close(type="button", data-bs-dismiss="modal")
+        form(action="/pacientes/historia/" + paciente.id_paciente + "/medicacion", method="POST")
+          .modal-body
+            .mb-3
+              label.form-label Grupo Sanguíneo
+              select.form-select(name="grupo_sanguineo")
+                option(value="") Seleccionar...
+                each grupo in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+                  option(value=grupo, selected=paciente.grupo_sanguineo===grupo) #{grupo}
+            .mb-3
+              label.form-label Alergias
+              textarea.form-control(name="alergias", rows="2", placeholder="Penicilina, látex, etc.") #{paciente.alergias}
+            .mb-3
+              label.form-label Medicación Actual Crónica
+              textarea.form-control(name="medicamentos_actuales", rows="3", placeholder="Enalapril 10mg / día...") #{paciente.medicamentos_actuales}
+          .modal-footer
+            button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Cancelar
+            button.btn.btn-warning(type="submit") Guardar Cambios
+
+  .modal.fade#modalConsulta(tabindex="-1")
+    .modal-dialog.modal-lg.modal-dialog-centered
+      .modal-content
+        .modal-header.bg-success.text-white
+          h5.modal-title Registrar Consulta / Nota Clínica
+          button.btn-close.btn-close-white(type="button", data-bs-dismiss="modal")
+        form(action="/pacientes/historia/" + paciente.id_paciente + "/consulta", method="POST")
+          .modal-body
+            .row.g-3
+              .col-md-6
+                label.form-label.fw-bold Tipo de Registro
+                select.form-select(name="tipo", required)
+                  option(value="Consulta Médica") Consulta Médica
+                  option(value="Control de Enfermería") Control de Enfermería
+                  option(value="Emisión de Receta") Solo Emisión de Receta
+              .col-md-6
+                label.form-label.fw-bold Motivo de la Atención
+                input.form-control(type="text", name="motivo", required, placeholder="Ej: Control de hipertensión")
+              .col-12
+                label.form-label.fw-bold Evolución / Observaciones
+                textarea.form-control(name="observaciones", rows="4", required, placeholder="Describa el examen físico, síntomas, y decisiones tomadas...")
+              .col-12
+                label.form-label.fw-bold Receta Médica Indicada (Opcional)
+                textarea.form-control(name="receta", rows="2", placeholder="Detallar medicamentos recetados y dosis hoy...")
+          .modal-footer
+            button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Cancelar
+            button.btn.btn-success(type="submit") Guardar Registro

@@ -1,60 +1,26 @@
-const { DataTypes } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 const sequelize = require('./sequelize');
 
-const Medico = sequelize.define('Medico', {
-  id_medico: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
-    allowNull: false
-  },
-  nombre: {
-    type: DataTypes.STRING(100),
-    allowNull: false
-  },
-  apellido: {
-    type: DataTypes.STRING(100),
-    allowNull: true
-  },
-  id_especialidad: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'especialidad',
-      key: 'id_especialidad'
-    }
-  },
-  matricula: {
-    type: DataTypes.STRING(50),
-    allowNull: false,
-    unique: true
-  },
-  telefono: {
-    type: DataTypes.STRING(20),
-    allowNull: true
-  },
-  email: {
-    type: DataTypes.STRING(100),
-    allowNull: false,
-    unique: true
-  },
-  activo: {
-    type: DataTypes.BOOLEAN,
-    allowNull: false,
-    defaultValue: true
-  }
-}, {
-  tableName: 'medicos',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at'
-});
+class Medico extends Model {}
 
-Medico.associate = (models) => {
-  Medico.belongsTo(models.Especialidad, { foreignKey: 'id_especialidad', as: 'especialidad' });
-  Medico.hasMany(models.Evaluacion, { foreignKey: 'id_medico', as: 'evaluaciones' });
-  Medico.hasMany(models.Alta, { foreignKey: 'id_medico', as: 'altas' });
-  Medico.hasMany(models.Turno, { foreignKey: 'id_medico', as: 'turnos' });
-};
+Medico.init({
+    id_medico: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+    dni: { type: DataTypes.STRING, allowNull: true, unique: true },
+    nombre: { type: DataTypes.STRING, allowNull: false },
+    apellido: { type: DataTypes.STRING, allowNull: false },
+    fecha_nacimiento: { type: DataTypes.DATEONLY, allowNull: true },
+    genero: { type: DataTypes.STRING, allowNull: true },
+    telefono: { type: DataTypes.STRING, allowNull: true },
+    email: { type: DataTypes.STRING, allowNull: true, unique: true },
+    direccion: { type: DataTypes.STRING, allowNull: true },
+    matricula: { type: DataTypes.STRING, allowNull: false },
+    id_especialidad: { type: DataTypes.INTEGER, allowNull: true },
+    activo: { type: DataTypes.BOOLEAN, defaultValue: true }
+}, {
+    sequelize,
+    modelName: 'Medico',
+    tableName: 'medicos',
+    timestamps: false
+});
 
 module.exports = Medico;

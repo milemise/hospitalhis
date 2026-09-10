@@ -2,34 +2,65 @@ extends ../layout
 
 block content
   .container.mt-4
-    .card.shadow-lg.p-4
-      .d-flex.justify-content-between.align-items-center.mb-4
-        h1.h3.text-primary.fw-bold Gestión de Usuarios
-        a(href="/usuarios/nuevo").btn.btn-primary.shadow-sm Nuevo Usuario
+    if error && error.length > 0
+      .alert.alert-danger.alert-dismissible.fade.show
+        | #{error}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+    if success && success.length > 0
+      .alert.alert-success.alert-dismissible.fade.show
+        | #{success}
+        button.btn-close(type="button", data-bs-dismiss="alert")
 
-      if usuarios.length === 0
-        p.text-muted.mt-4 No hay usuarios registrados en el sistema.
-      else
-        .table-responsive.mt-4
-          table.table.table-hover.table-striped.table-bordered.shadow-sm.rounded
-            thead.bg-light
+    .card.shadow-sm.border-0.rounded-3
+      .card-header.bg-white.py-3.d-flex.justify-content-between.align-items-center.border-bottom
+        h4.mb-0.text-primary.fw-bold Gestión de Usuarios
+        a.btn.btn-primary(href="/usuarios/nuevo") Nuevo Usuario
+      
+      .card-body.p-4
+        form.mb-4(action="/usuarios", method="GET")
+          .input-group.shadow-sm
+            input.form-control(type="text", name="buscar", placeholder="Buscar por nombre, email o rol...", value=buscar)
+            button.btn.btn-primary.px-4(type="submit")
+              i.fas.fa-search
+            if buscar
+              a.btn.btn-outline-secondary(href="/usuarios") Limpiar
+
+        .table-responsive
+          table.table.table-bordered.table-hover.align-middle
+            thead.table-light
               tr
                 th ID
                 th Nombre de Usuario
                 th Email
                 th Rol
                 th Creado
-                th.text-center Acciones
+                th Acciones
             tbody
-              each usuario in usuarios
+              if usuarios && usuarios.length > 0
+                each usuario in usuarios
+                  tr
+                    td #{usuario.id_usuario}
+                    td #{usuario.nombre_usuario}
+                    td #{usuario.email}
+                    td
+                      - const rolLower = (usuario.rol || '').toLowerCase()
+                      - let badgeClass = 'bg-secondary'
+                      if rolLower === 'admin' || rolLower === 'administrador'
+                        - badgeClass = 'bg-danger'
+                      else if rolLower === 'medico'
+                        - badgeClass = 'bg-primary'
+                      else if rolLower === 'enfermero' || rolLower === 'enfermera' || rolLower === 'enfermeria'
+                        - badgeClass = 'bg-success'
+                      else if rolLower === 'recepcion' || rolLower === 'admision'
+                        - badgeClass = 'bg-warning text-dark'
+                      
+                      span.badge.rounded-pill(class=badgeClass) #{usuario.rol}
+                    td N/A
+                    td
+                      .btn-group.btn-group-sm
+                        a.btn.btn-outline-info(href="/usuarios/editar/" + usuario.id_usuario) Editar
+                        form(action="/usuarios/eliminar/" + usuario.id_usuario, method="POST", onsubmit="return confirm('¿Seguro que desea eliminar a este usuario?');", style="display:inline;")
+                          button.btn.btn-outline-danger(type="submit") Eliminar
+              else
                 tr
-                  td #{usuario.id_usuario}
-                  td.fw-medium #{usuario.nombre_usuario}
-                  td #{usuario.email}
-                  td
-                    span.badge.rounded-pill(class=(usuario.rol === 'admin' ? 'bg-danger' : usuario.rol === 'medico' ? 'bg-primary' : usuario.rol === 'enfermero' ? 'bg-success' : 'bg-warning text-dark')) #{usuario.rol}
-                  td #{usuario.createdAt ? new Date(usuario.createdAt).toLocaleDateString('es-ES') : 'N/A'}
-                  td.text-center
-                    a(href="/usuarios/editar/" + usuario.id_usuario).btn.btn-sm.btn-outline-info.me-2 Editar
-                    form(action="/usuarios/eliminar/" + usuario.id_usuario, method="POST", onsubmit="return confirm('¿Está seguro de eliminar a este usuario?');", style="display:inline-block;")
-                      button(type="submit").btn.btn-sm.btn-outline-danger Eliminar
+                  td.text-center.text-muted(colspan="6") No se encontraron usuarios que coincidan con la búsqueda.

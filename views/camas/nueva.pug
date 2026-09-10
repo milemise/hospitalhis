@@ -1,0 +1,41 @@
+extends ../layout
+
+block content
+  .container.mt-5
+    .row.justify-content-center
+      .col-md-8
+        if error && error.length > 0
+          .alert.alert-danger.alert-dismissible.fade.show
+            | #{error}
+            button.btn-close(type="button", data-bs-dismiss="alert")
+        if success && success.length > 0
+          .alert.alert-success.alert-dismissible.fade.show
+            | #{success}
+            button.btn-close(type="button", data-bs-dismiss="alert")
+
+        .card.shadow-sm.border-0
+          .card-header.bg-primary.text-white
+            h4.mb-0 Registrar Nueva Cama
+          .card-body
+            form(action="/camas", method="POST")
+              .mb-3
+                label.form-label Habitación
+                select.form-select(name="id_habitacion", required)
+                  option(value="") Seleccionar Habitación
+                  if habitaciones
+                    each hab in habitaciones
+                      if hab.ala
+                        option(value=hab.id_habitacion) #{hab.ala.nombre} - Habitación #{hab.numero}
+              .mb-3
+                label.form-label Número o Identificador de Cama
+                input.form-control(type="text", name="numero", required, placeholder="Ej: Cama A")
+              .mb-3
+                label.form-label Estado Inicial
+                select.form-select(name="estado", required)
+                  option(value="Libre") Libre
+                  option(value="Ocupada") Ocupada
+                  option(value="En Limpieza") En Limpieza
+                  option(value="Fuera de Servicio") Fuera de Servicio
+              .d-flex.justify-content-end
+                a.btn.btn-secondary.me-2(href="/camas") Cancelar
+                button.btn.btn-primary(type="submit") Guardar Cama

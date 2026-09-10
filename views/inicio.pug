@@ -1,29 +1,31 @@
 extends layout
 
 block content
-  .container.mt-5
-    .card.shadow-lg.p-5.text-center
-      h1.card-title.display-4.text-primary.fw-bold.mb-4 Gestión Hospitalaria Simplificada
-      p.lead.text-muted.mb-5
-        | Optimiza la administración de internaciones, pacientes, médicos y recursos con nuestra plataforma intuitiva.
-        | Mejora la eficiencia y la calidad de atención en tu hospital.
-      
-      .row.g-4.justify-content-center
-        .col-md-6
-          a(href="/admisiones/nueva").btn.btn-primary.btn-lg.w-100.py-3.shadow-sm
-            span Registrar Nueva Admisión
-        .col-md-6
-          a(href="/pacientes/nuevo").btn.btn-success.btn-lg.w-100.py-3.shadow-sm
-            span Registrar Nuevo Paciente
-      
-      .mt-5.text-muted.small
-        if isAuthenticated && user
-          p.mb-2
-            | Has iniciado sesión como: 
-            span.text-primary.fw-semibold #{user.nombre_usuario || user.nombre || user.email.split('@')[0]}
-            |  con rol: 
-            span.text-primary.fw-semibold #{user.rol}.
-          p Explora las opciones del menú superior para empezar.
-        else
-          p Por favor, inicia sesión para acceder a todas las funcionalidades del sistema.
-          a(href="/auth/login").text-primary.text-decoration-none.fw-medium.mt-2.d-inline-block Iniciar Sesión aquí
+  .container-fluid(style="margin: -20px; width: calc(100% + 40px); min-height: calc(100vh - 70px); background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('/images/hospital-bg.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; display: flex; align-items: center; justify-content: center; padding: 40px;")
+    .row.justify-content-center.w-100
+      .col-lg-10
+        .card.shadow-lg.p-5.text-center.border-0.rounded-4.bg-white
+          h1.card-title.display-4.text-primary.fw-bold.mb-4 Gestión Hospitalaria Simplificada
+          p.lead.text-muted.mb-5
+            | Administración de internaciones, pacientes, médicos y recursos.
+          
+          
+          .row.g-4.justify-content-center
+            .col-md-6
+              a(href="/admisiones/nueva").btn.btn-primary.btn-lg.w-100.py-3.shadow-sm
+                span Registrar Nueva Admisión
+            .col-md-6
+              a(href="/pacientes/nuevo").btn.btn-success.btn-lg.w-100.py-3.shadow-sm
+                span Registrar Nuevo Paciente
+          
+          .mt-5.text-muted.small
+            if isAuthenticated && user
+              p.mb-2
+                | Has iniciado sesión como: 
+                span.text-primary.fw-semibold #{user.nombre_usuario || user.nombre || user.email.split('@')[0]}
+                |  con rol: 
+                span.text-primary.fw-semibold #{user.rol}.
+              p Explora las opciones del menú lateral para empezar.
+            else
+              p Por favor, inicia sesión para acceder a todas las funcionalidades del sistema.
+              a(href="/auth/login").text-primary.text-decoration-none.fw-medium.mt-2.d-inline-block Iniciar Sesión aquí

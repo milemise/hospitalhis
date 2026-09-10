@@ -22,21 +22,14 @@ const Usuario = sequelize.define('Usuario', {
     allowNull: false
   },
   rol: {
-    type: DataTypes.ENUM('admin', 'medico', 'enfermero', 'recepcion'),
+    type: DataTypes.STRING(50), // Cambiado a STRING para evitar choque con ENUM de Postgres
     allowNull: false
   }
 }, {
   tableName: 'usuarios',
   timestamps: true,
   createdAt: 'created_at',
-  updatedAt: 'updated_at',
-  hooks: {
-    beforeCreate: async (usuario) => {
-    },
-    beforeUpdate: async (usuario) => {
-    }
-  }
+  updatedAt: 'updated_at' // Corregido: Sequelize usa updatedAt, no updated_at como clave
 });
-
 
 module.exports = Usuario;

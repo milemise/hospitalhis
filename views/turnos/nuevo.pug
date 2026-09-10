@@ -1,35 +1,43 @@
 extends ../layout
 
 block content
-  .row.justify-content-center
-    .col-md-7.col-lg-6
-      .card.shadow-sm.my-5
-        .card-header.bg-primary.text-white.py-3
-          h1.h4.mb-0 Agendar Nuevo Turno
-        form(action="/turnos", method="POST")
+  .container.mt-5
+    .row.justify-content-center
+      .col-lg-8
+        .card.shadow-sm.border-0.rounded-3
+          .card-header.bg-primary.text-white.py-3
+            h4.mb-0 Agendar Nuevo Turno
+          
           .card-body.p-4
-            .mb-3
-              label.form-label(for="id_paciente") Paciente
-              select.form-select#id_paciente(name="id_paciente", required)
-                option(value="") Seleccionar Paciente
-                each p in pacientes
-                  option(value=p.id_paciente)= p.nombre + ' ' + p.apellido + ' (DNI: ' + p.dni + ')'
-            .mb-3
-              label.form-label(for="id_medico") Médico
-              select.form-select#id_medico(name="id_medico", required)
-                option(value="") Seleccionar Médico
-                each m in medicos
-                  option(value=m.id_medico)= m.nombre + ' ' + m.apellido
-            .mb-3
-              label.form-label(for="fecha_hora") Fecha y Hora
-              input.form-control#fecha_hora(type="datetime-local", name="fecha_hora", required)
-            .mb-3
-              label.form-label(for="estado") Estado
-              select.form-select#estado(name="estado", required)
-                option(value="pendiente") Pendiente
-                option(value="confirmado") Confirmado
-                option(value="cancelado") Cancelado
-                option(value="finalizado") Finalizado
-          .card-footer.text-end.bg-light
-            a.btn.btn-secondary(href="/turnos") Cancelar
-            button.btn.btn-primary.ms-2(type="submit") Guardar Turno
+            if error && error.length > 0
+              .alert.alert-danger #{error}
+
+            form(action="/turnos", method="POST")
+              .mb-3
+                label.form-label.fw-bold Paciente
+                select.form-select(name="id_paciente", required)
+                  option(value="", disabled, selected) Seleccionar Paciente
+                  each paciente in pacientes
+                    option(value=paciente.id_paciente) #{paciente.apellido}, #{paciente.nombre}
+
+              .mb-3
+                label.form-label.fw-bold Médico
+                select.form-select(name="id_medico", required)
+                  option(value="", disabled, selected) Seleccionar Médico
+                  each medico in medicos
+                    option(value=medico.id_medico) #{medico.apellido}, #{medico.nombre}
+
+              .mb-3
+                label.form-label.fw-bold Fecha y Hora
+                input.form-control(type="datetime-local", name="fecha_hora", required)
+
+              .mb-4
+                label.form-label.fw-bold Estado
+                select.form-select(name="estado", required)
+                  option(value="confirmado") Confirmado
+                  option(value="pendiente", selected) Pendiente
+                  option(value="cancelado") Cancelado
+
+              .d-flex.justify-content-end
+                a.btn.btn-secondary.me-2(href="/turnos") Cancelar
+                button.btn.btn-primary(type="submit") Guardar Turno

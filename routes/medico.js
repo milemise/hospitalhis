@@ -9,27 +9,14 @@ const isAuthenticated = (req, res, next) => {
     req.flash('error', 'Acceso denegado. Por favor, inicia sesión.');
     res.redirect('/auth/login');
 };
-const isAdminOrMedicoViewer = (req, res, next) => {
-    if (req.isAuthenticated() && (req.user.rol === 'admin' || req.user.rol === 'medico' || req.user.rol === 'enfermero')) {
-        return next();
-    }
-    req.flash('error', 'Acceso denegado.');
-    res.redirect('/');
-};
-const isAdmin = (req, res, next) => {
-    if (req.isAuthenticated() && req.user.rol === 'admin') {
-        return next();
-    }
-    req.flash('error', 'Acceso denegado. Solo administradores.');
-    res.redirect('/');
-};
 
+router.use(isAuthenticated);
 
-router.get('/', isAuthenticated, isAdminOrMedicoViewer, medicoController.listarMedicos);
-router.get('/nuevo', isAuthenticated, isAdmin, medicoController.formularioNueva);
-router.post('/', isAuthenticated, isAdmin, medicoController.guardarMedico);
-router.get('/editar/:id', isAuthenticated, isAdmin, medicoController.formularioEditar);
-router.post('/actualizar/:id', isAuthenticated, isAdmin, medicoController.actualizarMedico);
-router.post('/eliminar/:id', isAuthenticated, isAdmin, medicoController.eliminarMedico);
+router.get('/', medicoController.listarMedicos);
+router.get('/nuevo', medicoController.formularioNuevo);
+router.post('/', medicoController.guardarMedico);
+router.get('/editar/:id', medicoController.formularioEditar);
+router.post('/actualizar/:id', medicoController.actualizarMedico);
+router.post('/eliminar/:id', medicoController.eliminarMedico);
 
 module.exports = router;

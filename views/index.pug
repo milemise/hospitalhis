@@ -1,52 +1,39 @@
-extends ../layout
+extends layout
 
 block content
-  .container.mt-4
-    .card.shadow-lg.p-4
-      .d-flex.justify-content-between.align-items-center.mb-4
-        h1.card-title.h3.text-primary.fw-bold
-          i.fas.fa-user-injured.me-2
-          | Pacientes y sus Admisiones
-        a(href="/pacientes/nuevo").btn.btn-info.text-white.shadow-sm
-          i.fas.fa-plus.me-2
-          | Nuevo Paciente
+  //- Contenedor con un fondo degradado profesional de tono clínico
+ .container-fluid.py-5(style="background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('/images/hospital-bg.jpg'); background-size: cover; background-position: center; min-height: 85vh; display: flex; align-items: center;")
+    .container
+      .row.justify-content-center
+        .col-lg-10
+          //- Tarjeta principal con sombra pronunciada para que resalte sobre el fondo
+          .card.border-0.shadow-lg.rounded-4.overflow-hidden.bg-white
+            .card-body.p-5.text-center
+              .mb-4
+                i.fas.fa-hospital-symbol.fa-3x.text-primary.mb-3
+                h2.fw-bold.text-dark Gestión Hospitalaria Profesional
+                p.text-muted.lead.mx-auto(style="max-width: 600px;")
+                  | Plataforma integral para la administración de internaciones, pacientes, admisiones y recursos médicos del sistema HIS.
 
-      .table-responsive
-        table.table.table-hover.table-striped.table-bordered.shadow-sm.rounded
-          thead.bg-light
-            tr
-              th Nombre
-              th Fecha Nacimiento
-              th Sexo
-              th DNI
-              th Última Admisión
-              th Estado
-              th Habitación
-              th Acciones
+              hr.w-25.mx-auto.my-4.text-muted
 
-          tbody
-            each paciente in pacientes
-              tr
-                td.fw-medium #{paciente.nombre} #{paciente.apellido}
-                td #{paciente.fecha_nacimiento.toLocaleDateString()}
-                td
-                  span.badge.rounded-pill(class=(paciente.sexo === 'M' ? 'bg-primary' : 'bg-danger'))
-                    | #{paciente.sexo === 'M' ? 'Masculino' : 'Femenino'}
-                td.font-monospace #{paciente.dni}
-                td #{paciente.ultima_admision?.fecha ? paciente.ultima_admision.fecha.toLocaleDateString() : 'N/A'}
-                td
-                  span.badge.rounded-pill(class=(paciente.ultima_admision?.estado === 'Activo' ? 'bg-success' : 'bg-secondary'))
-                    | #{paciente.ultima_admision?.estado || 'Sin internar'}
-                td.font-medium #{paciente.ultima_admision?.habitacion || '—'}
-                td
-                  .btn-group.btn-group-sm(role='group')
-                    a(href=`/pacientes/${paciente.id}`).btn.btn-outline-primary(title="Ver Detalle")
-                      i.fas.fa-eye
-                    a(href=`/pacientes/editar/${paciente.id}`).btn.btn-outline-warning(title="Editar")
-                      i.fas.fa-edit
-                    a(href=`/pacientes/admision/${paciente.id}`).btn.btn-outline-info(title="Nueva Admisión")
-                      i.fas.fa-procedures
+              //- Botones de Acceso Rápido Operativo
+              .row.g-3.justify-content-center.mb-4
+                .col-md-5
+                  a.btn.btn-primary.btn-lg.w-100.py-3.shadow-sm.d-flex.align-items-center.justify-content-center(href="/admisiones")
+                    i.fas.fa-user-plus.me-2.fa-lg
+                    | Registrar Nueva Admisión
+                .col-md-5
+                  a.btn.btn-success.btn-lg.w-100.py-3.shadow-sm.d-flex.align-items-center.justify-content-center(href="/pacientes")
+                    i.fas.fa-user-injured.me-2.fa-lg
+                    | Registrar Nuevo Paciente
 
-block scripts
-  script.
-    document.addEventListener('DOMContentLoaded', function() {});
+              //- Pie de estado de sesión
+              .mt-4.pt-3.border-top.text-muted.small
+                span.d-inline-block.bg-light.px-3.py-2.rounded-pill.border
+                  i.fas.fa-user-circle.me-1.text-primary
+                  | Sesión activa: 
+                  strong.text-dark #{user ? user.nombre_usuario || user.email : 'Usuario'} 
+                  |  (Rol: 
+                  span.text-uppercase.fw-bold.text-primary #{user ? user.rol : 'Invitado'}
+                  |)

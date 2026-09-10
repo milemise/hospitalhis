@@ -3,72 +3,154 @@ html(lang="es")
   head
     meta(charset="UTF-8")
     meta(name="viewport", content="width=device-width, initial-scale=1.0")
-    title #{title} - Sistema HIS
-    link(rel="stylesheet", href="/css/bootstrap.min.css")
-    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css")
-    link(rel="stylesheet", href="/css/style.css")
-    meta(name="layout-version", content="2025-06-10-B")
+    title Sistema HIS - Hospital
+    // Bootstrap CSS
+    link(href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css", rel="stylesheet")
+    // FontAwesome
+    link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css")
+    style.
+      body {
+        display: flex;
+        min-height: 100vh;
+        background-color: #f4f6f9;
+      }
+      .sidebar {
+        min-width: 250px;
+        max-width: 250px;
+        background-color: #343a40;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+      }
+      .sidebar .brand {
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding: 1.5rem 1rem;
+        background-color: #0d6efd;
+        color: white;
+        text-align: center;
+        text-decoration: none;
+      }
+      .sidebar a.nav-link {
+        color: #c2c7d0;
+        padding: 10px 20px;
+        border-radius: 4px;
+        margin: 4px 10px;
+        transition: all 0.3s;
+      }
+      .sidebar a.nav-link:hover, .sidebar a.nav-link.active {
+        background-color: #0d6efd;
+        color: #fff;
+      }
+      .sidebar a.nav-link i {
+        width: 25px;
+      }
+      .content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+      }
+      .topbar {
+        background-color: #fff;
+        padding: 15px 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
   body
-    nav.navbar.navbar-expand-lg.navbar-dark.bg-primary.shadow
-      .container-fluid
-        a.navbar-brand(href="/") Sistema HIS
-        button.navbar-toggler(type="button", data-bs-toggle="collapse", data-bs-target="#navbarNav", aria-controls="navbarNav", aria-expanded="false", aria-label="Toggle navigation")
-          span.navbar-toggler-icon
-        #navbarNav.collapse.navbar-collapse
-          ul.navbar-nav.me-auto.mb-2.mb-lg-0
-            li.nav-item
-              a.nav-link(href="/pacientes") Pacientes
-            li.nav-item
-              a.nav-link(href="/admisiones") Admisiones
-            li.nav-item
-              a.nav-link(href="/medicos") Médicos
-            li.nav-item
-              a.nav-link(href="/turnos") Turnos
-            li.nav-item
-              a.nav-link(href="/evaluaciones") Evaluaciones
-            li.nav-item
-              a.nav-link(href="/altas") Altas
-            li.nav-item
-              a.nav-link(href="/usuarios") Usuarios
-            li.nav-item
-              a.nav-link(href="/reportes") Reportes
-            li.nav-item
-              a.nav-link(href="/ajustes") Ajustes
-          ul.navbar-nav
-            if isAuthenticated
-              li.nav-item.dropdown
-                a#navbarDropdown.nav-link.dropdown-toggle(href="#", role="button", data-bs-toggle="dropdown", aria-expanded="false")
-                  i.fas.fa-user-circle.me-1
-                  | #{user.nombre_usuario || user.email || 'Usuario'}
-                ul.dropdown-menu(aria-labelledby="navbarDropdown")
-                  li
-                    a.dropdown-item(href="/perfil") Perfil
-                  li
-                    hr.dropdown-divider
-                  li
-                    a.dropdown-item(href="/auth/logout") Cerrar Sesión
-            else
-              li.nav-item
-                a.btn.btn-outline-light(href="/auth/login") Iniciar Sesión
+    //- Lógica de roles
+    - const userRole = user ? (user.rol || '').toLowerCase().trim() : ''
+    - const isEnfermero = userRole === 'enfermero' || userRole === 'enfermera'
+    - const isMedico = userRole === 'medico' || userRole === 'médico'
+    - const isRecepcion = userRole === 'recepcion' || userRole === 'recepción'
+    - const isAdmin = userRole === 'admin' || userRole === 'administrador'
 
-    .container.mt-4
-      if success && success.length
-        .alert.alert-success.alert-dismissible.fade.show(role="alert")
-          ul.mb-0
-            each msg in success
-              li= msg
-          button.btn-close(type="button", data-bs-dismiss="alert", aria-label="Close")
-      if error && error.length
-        .alert.alert-danger.alert-dismissible.fade.show(role="alert")
-          ul.mb-0
-            each msg in error
-              li= msg
-          button.btn-close(type="button", data-bs-dismiss="alert", aria-label="Close")
+    // SIDEBAR
+    nav.sidebar
+      a.brand(href="/") 
+        i.fas.fa-hospital.me-2
+        | Sistema HIS
 
-      block content
+      .mt-3.mb-2.px-3.text-uppercase.text-secondary.small.fw-bold Menú Principal
+      ul.nav.flex-column
+        li.nav-item
+          a.nav-link(href="/")
+            i.fas.fa-tachometer-alt
+            | Dashboard
+            
+        //- Todos los roles clínicos y administrativos ven a los Pacientes
+        if isAdmin || isRecepcion || isMedico || isEnfermero
+          li.nav-item
+            a.nav-link(href="/pacientes")
+              i.fas.fa-users
+              | Pacientes
 
-    script(src="/js/bootstrap.bundle.min.js")
-    script(src="/js/alerts.js")
-    script(src="/js/admisionesNueva.js")
+        //- Enfermeros, Médicos, Recepción y Admin DEBEN ver las Internaciones (Admisiones)
+        if isAdmin || isRecepcion || isMedico || isEnfermero
+          li.nav-item
+            a.nav-link(href="/admisiones")
+              i.fas.fa-procedures
+              | Admisiones / Internados
 
-    block scripts
+        //- Enfermeros, Recepción y Admin manejan las Camas
+        if isAdmin || isRecepcion || isEnfermero
+          li.nav-item
+            a.nav-link(href="/camas")
+              i.fas.fa-bed
+              | Gestión de Camas
+
+        //- Turnos (Recepción, Admin, Médicos)
+        if isAdmin || isRecepcion || isMedico
+          li.nav-item
+            a.nav-link(href="/turnos")
+              i.fas.fa-calendar-check
+              | Turnos
+
+        //- Plantel Médico (Admin, Recepción)
+        if isAdmin || isRecepcion
+          li.nav-item
+            a.nav-link(href="/medicos")
+              i.fas.fa-user-md
+              | Plantel Médico
+
+        //- Usuarios (Solo Admin)
+        if isAdmin
+          .mt-4.mb-2.px-3.text-uppercase.text-secondary.small.fw-bold Sistema
+          li.nav-item
+            a.nav-link(href="/usuarios")
+              i.fas.fa-user-cog
+              | Gestión de Usuarios
+
+      .mt-auto
+        ul.nav.flex-column.mb-3
+          li.nav-item
+            a.nav-link.text-info(href="/perfil")
+              i.fas.fa-user-circle
+              | Mi Perfil
+          li.nav-item
+            a.nav-link.text-danger(href="/auth/logout")
+              i.fas.fa-sign-out-alt
+              | Cerrar Sesión
+
+    // CONTENIDO PRINCIPAL
+    .content
+      // TOPBAR
+      header.topbar
+        div
+          //- Espacio para breadcrumbs o título de página
+        div.text-muted
+          if user
+            span Bienvenido, 
+            strong #{user.nombre_usuario || user.email} 
+            span.badge.bg-primary.ms-2 #{user.rol}
+          else
+            span Invitado
+
+      // DINÁMICO
+      main.p-4
+        block content
+
+    // Scripts de Bootstrap
+    script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")

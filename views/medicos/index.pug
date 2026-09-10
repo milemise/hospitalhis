@@ -1,46 +1,67 @@
 extends ../layout
 
 block content
-  .container.mt-4
+  .container-fluid.mt-4
+    if error && error.length > 0
+      .alert.alert-danger.alert-dismissible.fade.show
+        | #{error}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+    if success && success.length > 0
+      .alert.alert-success.alert-dismissible.fade.show
+        | #{success}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+
     .card.shadow-lg.p-4
-      .card-header.bg-primary.text-white.py-3
+      .card-header.bg-primary.text-white.py-3.rounded-3
         .d-flex.justify-content-between.align-items-center
-          h1.h4.mb-0 Gestión de Médicos
-          a.btn.btn-info.text-white(href="/medicos/nuevo")
-            i.fas.fa-plus-lg.me-1
+          h1.h4.mb-0 Gestión del Plantel Médico
+          a.btn.btn-light.text-primary.fw-bold(href="/medicos/nuevo")
+            i.fas.fa-plus.me-1
             | Nuevo Médico
+      
       .card-body
+        form.mb-4(action="/medicos", method="GET")
+          .row.g-2
+            .col-md-6
+              .input-group
+                input.form-control(type="text", name="buscar", placeholder="Buscar por DNI, nombre, matrícula o especialidad...", value=buscar)
+                button.btn.btn-outline-primary(type="submit") Buscar
+            .col-md-3
+              if buscar
+                a.btn.btn-outline-secondary.w-100(href="/medicos") Limpiar Filtro
+
         if medicos.length === 0
-          .alert.alert-info.mb-0 No hay médicos registrados en el sistema.
+          .alert.alert-info.mb-0 No se encontraron profesionales médicos registrados.
         else
           .table-responsive
-            table.table.table-striped.table-hover.align-middle.table-bordered
+            table.table.table-striped.table-hover.table-bordered.align-middle
               thead.table-light
                 tr
                   th ID
+                  th DNI
                   th Nombre Completo
                   th Especialidad
                   th Matrícula
                   th Teléfono
                   th Email
-                  th Activo
+                  th Estado
                   th.text-center Acciones
               tbody
                 each medico in medicos
                   tr
                     td #{medico.id_medico}
+                    td #{medico.dni || 'N/A'}
                     td #{medico.nombre} #{medico.apellido}
-                    td #{medico.especialidad ? medico.especialidad.nombre : 'N/A'}
+                    td #{medico.especialidad ? medico.especialidad.nombre : 'Sin Especialidad'}
                     td #{medico.matricula}
                     td #{medico.telefono || 'N/A'}
                     td #{medico.email || 'N/A'}
                     td
-                      if medico.activo
-                        span.badge.bg-success Sí
-                      else
-                        span.badge.bg-danger No
+                      - const estadoTexto = (medico.activo === false) ? 'Inactivo' : 'Activo'
+                      - const estadoClass = (medico.activo === false) ? 'bg-secondary' : 'bg-success'
+                      span(class=`badge ${estadoClass}`) #{estadoTexto}
                     td.text-center
-                      .d-inline-flex.gap-2
+                      .btn-group
                         a.btn.btn-sm.btn-outline-primary(href="/medicos/editar/" + medico.id_medico) Editar
-                        form(action="/medicos/eliminar/" + medico.id_medico, method="POST", onsubmit="return confirm('¿Está seguro de eliminar a este médico?');")
-                          button.btn.btn-sm.btn-outline-danger(type="submit") Eliminar
+                        form(action="/medicos/eliminar/" + medico.id_medico, method="POST", style="display:inline;", onsubmit="return confirm('¿Está seguro de cambiar el estado de este médico?');")
+                          button.btn.btn-sm.btn-outline-warning(type="submit") Estado

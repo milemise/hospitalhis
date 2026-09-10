@@ -1,70 +1,133 @@
 extends ../layout
 
 block content
-  .row.justify-content-center
-    .col-md-10.col-lg-8
-      .card.shadow-sm.my-5
-        .card-header.bg-primary.text-white.py-3
-          h1.h4.mb-0 Registrar Nuevo Paciente
+  .container.mt-4
+    if error && error.length > 0
+      .alert.alert-danger.alert-dismissible.fade.show
+        | #{error}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+
+    .card.shadow-sm.border-0.mb-4.bg-light
+      .card-body
+        .row.align-items-center
+          .col-md-8
+            h6.fw-bold.text-primary.mb-1 
+              i.fas.fa-user-md.me-2
+              | ¿El paciente es un Médico o Empleado del hospital?
+            p.text-muted.small.mb-0 Buscá su nombre o correo para autocompletar sus datos y ahorrar tiempo de carga.
+          .col-md-4.mt-3.mt-md-0
+            .input-group
+              input.form-control#inputTermino(type="text", placeholder="Ej: Juan Pérez o juan@hospital.com")
+              button.btn.btn-primary#btnAutocompletar(type="button")
+                i.fas.fa-magic.me-1
+                | Autocompletar
+
+    .card.shadow-sm.border-0.rounded-3
+      .card-header.bg-primary.text-white.py-3
+        h4.mb-0 Registrar Nuevo Paciente
+      
+      .card-body.p-4
         form(action="/pacientes", method="POST")
-          .card-body.p-4
-            .row.g-3
-              .col-md-6
-                label.form-label(for="nombre") Nombre
-                input.form-control#nombre(type="text", name="nombre", placeholder="Nombre del paciente", required)
-              .col-md-6
-                label.form-label(for="apellido") Apellido
-                input.form-control#apellido(type="text", name="apellido", placeholder="Apellido del paciente", required)
-              .col-md-6
-                label.form-label(for="dni") DNI
-                input.form-control#dni(type="text", name="dni", placeholder="Número de DNI", required)
-              .col-md-6
-                label.form-label(for="fecha_nacimiento") Fecha de Nacimiento
-                input.form-control#fecha_nacimiento(type="date", name="fecha_nacimiento", required)
-              .col-md-6
-                label.form-label(for="genero") Género
-                select.form-select#genero(name="genero", required)
-                  option(value="") Seleccionar Género
-                  option(value="Masculino") Masculino
-                  option(value="Femenino") Femenino
-                  option(value="Otro") Otro
-                  option(value="No especificado") No especificado
-              .col-md-6
-                label.form-label(for="telefono") Teléfono (Opcional)
-                input.form-control#telefono(type="text", name="telefono", placeholder="Número de teléfono")
-              .col-md-6
-                label.form-label(for="email") Email (Opcional)
-                input.form-control#email(type="email", name="email", placeholder="Correo electrónico")
-              .col-md-6
-                label.form-label(for="direccion") Dirección (Opcional)
-                input.form-control#direccion(type="text", name="direccion", placeholder="Dirección del paciente")
-              .col-md-6
-                label.form-label(for="grupo_sanguineo") Grupo Sanguíneo 
-                select.form-select#grupo_sanguineo(name="grupo_sanguineo",required)
-                  option(value="") Seleccionar
-                  option(value="A+") A+
-                  option(value="A-") A-
-                  option(value="B+") B+
-                  option(value="B-") B-
-                  option(value="AB+") AB+
-                  option(value="AB-") AB-
-                  option(value="O+") O+
-                  option(value="O-") O-
-              .col-md-6
-                label.form-label(for="id_obra_social") Obra Social (Opcional)
-                select.form-select#id_obra_social(name="id_obra_social")
-                  option(value="") Seleccionar Obra Social
+          .row.g-3
+            .col-md-6
+              label.form-label.fw-bold Nombre
+              input.form-control#inputNombre(type="text", name="nombre", required)
+            
+            .col-md-6
+              label.form-label.fw-bold Apellido
+              input.form-control#inputApellido(type="text", name="apellido", required)
+            
+            .col-md-6
+              label.form-label.fw-bold DNI
+              input.form-control#inputDni(type="text", name="dni", required, placeholder="Ej: 35123456")
+            
+            .col-md-6
+              label.form-label.fw-bold Fecha de Nacimiento
+              input.form-control#inputNacimiento(type="date", name="fecha_nacimiento", required)
+            
+            .col-md-6
+              label.form-label.fw-bold Género
+              select.form-select#selectGenero(name="genero", required)
+                option(value="") Seleccionar...
+                option(value="Masculino") Masculino
+                option(value="Femenino") Femenino
+                option(value="Otro") Otro
+            
+            .col-md-6
+              label.form-label.fw-bold Teléfono (Opcional)
+              input.form-control#inputTelefono(type="text", name="telefono")
+            
+            .col-md-6
+              label.form-label.fw-bold Email (Opcional)
+              input.form-control#inputEmail(type="email", name="email")
+            
+            .col-md-6
+              label.form-label.fw-bold Dirección (Opcional)
+              input.form-control#inputDireccion(type="text", name="direccion")
+            
+            .col-md-6
+              label.form-label.fw-bold Grupo Sanguíneo (Opcional)
+              select.form-select(name="grupo_sanguineo")
+                option(value="") Seleccionar...
+                each grupo in ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
+                  option(value=grupo) #{grupo}
+            
+            .col-md-6
+              label.form-label.fw-bold Obra Social (Opcional)
+              select.form-select(name="id_obra_social")
+                option(value="") Seleccionar...
+                if obrasSociales
                   each os in obrasSociales
-                    option(value=os.id_obra_social)= os.nombre
-              .col-md-6
-                label.form-label(for="numero_afiliado") Número de Afiliado (Opcional)
-                input.form-control#numero_afiliado(type="text", name="numero_afiliado", placeholder="Número de afiliado")
-              .col-md-6
-                label.form-label(for="alergias") Alergias (Opcional)
-                textarea.form-control#alergias(name="alergias", rows="2", placeholder="Alergias conocidas")
-              .col-md-6
-                label.form-label(for="medicamentos_actuales") Medicamentos Actuales (Opcional)
-                textarea.form-control#medicamentos_actuales(name="medicamentos_actuales", rows="2", placeholder="Medicamentos que toma actualmente")
-          .card-footer.text-end.bg-light
-            a.btn.btn-secondary(href="/pacientes") Cancelar
-            button.btn.btn-primary.ms-2(type="submit") Guardar Paciente
+                    option(value=os.id_obra_social) #{os.nombre}
+            
+            .col-12
+              label.form-label.fw-bold Número de Afiliado (Opcional)
+              input.form-control(type="text", name="numero_afiliado")
+            
+            .col-12
+              label.form-label.fw-bold Alergias (Opcional)
+              textarea.form-control(name="alergias", rows="2", placeholder="Ninguna conocida...")
+            
+            .col-12
+              label.form-label.fw-bold Medicamentos Actuales (Opcional)
+              textarea.form-control(name="medicamentos_actuales", rows="2", placeholder="Ninguno...")
+
+          .card-footer.bg-white.text-end.mt-4.pb-0.pe-0.border-0
+            a.btn.btn-secondary.me-2(href="/pacientes") Cancelar
+            button.btn.btn-success(type="submit") Guardar Paciente
+
+  script.
+    document.getElementById('btnAutocompletar').addEventListener('click', async () => {
+      const termino = document.getElementById('inputTermino').value.trim();
+      if (!termino) {
+        alert('Por favor, ingresa un nombre, DNI o email para buscar.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/pacientes/buscar-personal?termino=${encodeURIComponent(termino)}`);
+        const resultado = await response.json();
+
+        if (resultado.encontrado) {
+          const d = resultado.datos;
+          document.getElementById('inputNombre').value = d.nombre || '';
+          document.getElementById('inputApellido').value = d.apellido || '';
+          document.getElementById('inputDni').value = d.dni || '';
+          document.getElementById('inputTelefono').value = d.telefono || '';
+          document.getElementById('inputEmail').value = d.email || '';
+          document.getElementById('inputDireccion').value = d.direccion || '';
+          if (d.fecha_nacimiento) {
+            document.getElementById('inputNacimiento').value = d.fecha_nacimiento;
+          }
+          if (d.genero) {
+            document.getElementById('selectGenero').value = d.genero;
+          }
+          alert('¡Datos del personal cargados con éxito!');
+        } else {
+          alert('No se encontró ningún médico o usuario con ese término.');
+        }
+      } catch (error) {
+        console.error('Error al autocompletar:', error);
+        alert('Ocurrió un error al realizar la búsqueda.');
+      }
+    });

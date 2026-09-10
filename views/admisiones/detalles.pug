@@ -2,116 +2,88 @@ extends ../layout
 
 block content
   .container.mt-4
-    .card.shadow-lg.p-4
-      .card-header.bg-primary.text-white.py-3
-        .d-flex.justify-content-between.align-items-center
-          h1.card-title.h3.mb-0 Detalles de Admisión ##{admision.id_admision}
-          .d-flex.flex-wrap.gap-2
-            a.btn.btn-warning.btn-sm.text-dark(href="/admisiones/editar/" + admision.id_admision)
-              i.fas.fa-pencil-alt.me-1
+    if error && error.length > 0
+      .alert.alert-danger.alert-dismissible.fade.show
+        | #{error}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+    if success && success.length > 0
+      .alert.alert-success.alert-dismissible.fade.show
+        | #{success}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+
+    .card.shadow-sm.border-0.rounded-3
+      .card-header.bg-primary.text-white.py-3.d-flex.justify-content-between.align-items-center
+        h4.mb-0 Detalles de Admisión ##{admision.id_admision}
+        .btn-group
+          if admision.estado_admision === 'Activo' || admision.estado_admision === 'En Proceso'
+            a.btn.btn-warning(href="/admisiones/editar/" + admision.id_admision) 
+              i.fas.fa-edit.me-1
               | Editar
-            if admision.estado_admision === 'Activo' || admision.estado_admision === 'En Proceso'
-              a.btn.btn-info.btn-sm.text-white(href="/evaluaciones/nueva/" + admision.id_admision) Registrar Evaluación
-              a.btn.btn-success.btn-sm.text-white(href="/altas/nueva/" + admision.id_admision) Dar Alta
-              form(action="/admisiones/cancelar/" + admision.id_admision, method="POST", onsubmit="return confirm('¿Está seguro de cancelar esta admisión?');", style="display:inline-block;")
-                button.btn.btn-danger.btn-sm(type="submit") Cancelar
-            a.btn.btn-secondary.btn-sm(href="/admisiones") Volver
-
+            a.btn.btn-info(href="/evaluaciones/nueva/" + admision.id_admision) Registrar Evaluación
+            a.btn.btn-success(href="/altas/nueva/" + admision.id_admision) Dar Alta
+            form(action="/admisiones/cancelar/" + admision.id_admision, method="POST", style="display:inline;", onsubmit="return confirm('¿Seguro que desea cancelar esta admisión?');")
+              button.btn.btn-danger(type="submit", style="border-radius: 0;") Cancelar
+          a.btn.btn-secondary(href="/admisiones") Volver
+      
       .card-body.p-4
-        .row.g-3.mb-4
+        .row.g-4
           .col-md-6
-            .card.h-100
-              .card-header.h5.bg-light.text-dark Información de Admisión
+            .card.h-100.border-0.bg-light
               .card-body
-                p.mb-2 #[strong ID:] #{admision.id_admision}
-                p.mb-2 #[strong Fecha de Ingreso:] #{admision.fecha_ingreso ? new Date(admision.fecha_ingreso).toLocaleString('es-ES') : 'N/A'}
-                p.mb-2 #[strong Fecha de Alta:] #{admision.fecha_alta ? new Date(admision.fecha_alta).toLocaleString('es-ES') : 'Pendiente'}
-                p.mb-2 #[strong Motivo:] #{admision.motivo_internacion || 'N/A'}
-                p.mb-2 #[strong Tipo:]
-                  span(class=admision.es_emergencia ? 'fw-bold text-danger' : 'fw-bold text-primary') #{admision.es_emergencia ? 'Emergencia' : 'Normal'}
-                p.mb-2 #[strong Estado:]
-                  - const estadoClass = admision.estado_admision === 'Activo' ? 'bg-success' : admision.estado_admision === 'Dada de Alta' ? 'bg-primary' : admision.estado_admision === 'Cancelada' ? 'bg-danger' : 'bg-warning text-dark'
-                  span(class=`badge ${estadoClass}`) #{admision.estado_admision}
-
+                h6.fw-bold.text-uppercase.border-bottom.pb-2 Información de Admisión
+                p.mb-1 #[strong ID:] #{admision.id_admision}
+                p.mb-1 #[strong Fecha de Ingreso:] #{new Date(admision.fecha_ingreso).toLocaleString('es-ES')}
+                p.mb-1 #[strong Motivo:] #{admision.motivo_internacion}
+                p.mb-1 #[strong Tipo:] #{admision.es_emergencia ? 'Emergencia' : 'Programada'}
+                p.mb-0 #[strong Estado:] 
+                  span.badge.bg-primary #{admision.estado_admision}
+          
           .col-md-6
-            .card.h-100
-              .card-header.h5.bg-light.text-dark Información del Paciente
+            .card.h-100.border-0.bg-light
               .card-body
-                if admision.paciente
-                  p.mb-2 #[strong Nombre:] #{admision.paciente.nombre} #{admision.paciente.apellido}
-                  p.mb-2 #[strong DNI:] #{admision.paciente.dni}
-                  p.mb-2 #[strong Género:] #{admision.paciente.genero}
-                  p.mb-2 #[strong Fecha Nacimiento:] #{admision.paciente.fecha_nacimiento ? new Date(admision.paciente.fecha_nacimiento).toLocaleDateString('es-ES') : 'N/A'}
-                  p.mb-2 #[strong Obra Social:] #{admision.paciente.obraSocial ? admision.paciente.obraSocial.nombre : 'N/A'}
-                  p.mb-2 #[strong Teléfono:] #{admision.paciente.telefono || 'N/A'}
-                  p.mb-2 #[strong Email:] #{admision.paciente.email || 'N/A'}
-                  p.mb-2 #[strong Dirección:] #{admision.paciente.direccion || 'N/A'}
-                  a(href=`/pacientes/editar/${admision.paciente.id_paciente}`).btn.btn-sm.btn-outline-primary.mt-2 Editar Datos del Paciente
-                else
-                  p.text-muted Paciente no asignado o desconocido.
+                h6.fw-bold.text-uppercase.border-bottom.pb-2 Información del Paciente
+                p.mb-1 #[strong Nombre:] #{admision.paciente.nombre} #{admision.paciente.apellido}
+                p.mb-1 #[strong DNI:] #{admision.paciente.dni}
+                p.mb-1 #[strong Obra Social:] #{admision.paciente.obraSocial ? admision.paciente.obraSocial.nombre : 'Particular'}
+                p.mb-0 #[strong Grupo Sanguíneo:] #{admision.paciente.grupo_sanguineo || 'No registrado'}
 
-        .card.mb-4
-          .card-header.h5.bg-light.text-dark Cama Asignada Actualmente
+        .card.mt-4.border-0.bg-light
           .card-body
-            if admision.cama && admision.cama.habitacion && admision.cama.habitacion.ala
-              p.mb-2 #[strong Ala:] #{admision.cama.habitacion.ala.nombre}
-              p.mb-2 #[strong Habitación:] #{admision.cama.habitacion.numero} (#{admision.cama.habitacion.tipo})
-              p.mb-2 #[strong Cama:] #{admision.cama.numero} (Estado: #{admision.cama.estado})
-              p.mb-2 #[strong Género Asignado a Cama:] #{admision.cama.genero_asignado ? (admision.cama.genero_asignado === 'M' ? 'Masculino' : 'Femenino') : 'Mixto/Individual'}
+            h6.fw-bold.text-uppercase.border-bottom.pb-2 Cama Asignada
+            if admision.cama && admision.cama.habitacion
+              p.mb-1 #[strong Ala:] #{admision.cama.habitacion.ala.nombre}
+              p.mb-1 #[strong Habitación:] #{admision.cama.habitacion.numero}
+              p.mb-0 #[strong Cama:] #{admision.cama.numero}
             else
-              p.text-muted No hay cama asignada actualmente para esta admisión.
+              p.text-muted Sin asignar
 
-        .card.mb-4
-          .card-header.h5.bg-light.text-dark Historial de Evaluaciones
-          if admision.evaluaciones && admision.evaluaciones.length > 0
-            .table-responsive
-              table.table.table-striped.table-hover.table-bordered.mb-0
-                thead.table-light
-                  tr
-                    th Fecha
-                    th Médico
-                    th Diagnóstico
-                    th Signos Vitales
-                    th Plan de Cuidados
-                tbody
-                  each eval in admision.evaluaciones
+        .card.mt-4.border-0
+          .card-body.p-0
+            h6.fw-bold.text-uppercase.border-bottom.pb-2.mb-3 Historial de Evaluaciones
+            if admision.evaluaciones && admision.evaluaciones.length > 0
+              .table-responsive
+                table.table.table-bordered.align-middle
+                  thead.table-light
                     tr
-                      td #{eval.fecha_evaluacion ? new Date(eval.fecha_evaluacion).toLocaleDateString('es-ES') : 'N/A'}
-                      td #{eval.medico ? eval.medico.nombre + ' ' + eval.medico.apellido : 'N/A'}
-                      td #{eval.diagnostico || 'N/A'}
-                      td
-                        if eval.signos_vitales
-                          ul.list-unstyled.mb-0
-                            if eval.signos_vitales.presion_arterial
-                              li PA: #{eval.signos_vitales.presion_arterial}
-                            if eval.signos_vitales.frecuencia_cardiaca
-                              li FC: #{eval.signos_vitales.frecuencia_cardiaca}
-                            if eval.signos_vitales.frecuencia_respiratoria
-                              li FR: #{eval.signos_vitales.frecuencia_respiratoria}
-                            if eval.signos_vitales.temperatura
-                              li Temp: #{eval.signos_vitales.temperatura}°C
-                        else
-                          | N/A
-                      td #{eval.plan_cuidados || 'N/A'}
-          else
-            p.text-muted No hay evaluaciones registradas para esta admisión.
-
-        if admision.alta
-          .card.mb-4.border-success
-            .card-header.bg-success.text-white.h5 Información de Alta
-            .card-body
-              p.mb-2 #[strong Fecha de Alta Real:] #{admision.alta.fecha_alta_real ? new Date(admision.alta.fecha_alta_real).toLocaleString('es-ES') : 'N/A'}
-              p.mb-2 #[strong Médico Responsable:] #{admision.alta.medico ? admision.alta.medico.nombre + ' ' + admision.alta.medico.apellido : 'N/A'}
-              p.mb-2 #[strong Diagnóstico Final:] #{admision.alta.diagnostico_final || 'N/A'}
-              p.mb-2 #[strong Tratamiento Indicado:] #{admision.alta.tratamiento_indicado || 'N/A'}
-              p.mb-2 #[strong Medicamentos Recetados:] #{admision.alta.medicamentos_recetados || 'N/A'}
-              p.mb-2 #[strong Fecha Control Sugerido:] #{admision.alta.fecha_control_sugerido ? new Date(admision.alta.fecha_control_sugerido).toLocaleDateString('es-ES') : 'N/A'}
-              p.mb-2 #[strong Observaciones de Alta:] #{admision.alta.observaciones_alta || 'N/A'}
-        else
-          .card.mb-4.bg-light
-            .card-body
-              h5.card-title Estado de Alta
-              p.card-text.text-muted El paciente aún no ha sido dado de alta.
-        
-        .mt-4.text-end
-          a.btn.btn-secondary(href="/admisiones") Volver a Admisiones
+                      th Fecha
+                      th Profesional
+                      th Signos Vitales
+                      th Observaciones
+                  tbody
+                    each ev in admision.evaluaciones
+                      tr
+                        td #{new Date(ev.fecha_evaluacion).toLocaleString('es-ES')}
+                        td #{ev.medico ? ev.medico.nombre + ' ' + ev.medico.apellido : 'Enfermería'}
+                        td
+                          ul.list-unstyled.mb-0.small
+                            if ev.temperatura
+                              li Temp: #{ev.temperatura}°C
+                            if ev.presion_arterial
+                              li PA: #{ev.presion_arterial}
+                            if ev.frecuencia_cardiaca
+                              li FC: #{ev.frecuencia_cardiaca} lpm
+                            if ev.saturacion_oxigeno
+                              li SatO2: #{ev.saturacion_oxigeno}%
+                        td #{ev.observaciones_medicas}
+            else
+              p.text-muted No hay evaluaciones registradas para esta admisión.

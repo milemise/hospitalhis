@@ -47,9 +47,12 @@ app.use(flash());
 app.use((req, res, next) => {
     res.locals.user = req.user || null;
     res.locals.isAuthenticated = req.isAuthenticated();
-    res.locals.success_msg = req.flash('success');
-    res.locals.error_msg = req.flash('error');
-    res.locals.error = req.flash('error');
+    const errorFlash = req.flash('error');
+    const successFlash = req.flash('success');
+    res.locals.success_msg = successFlash;
+    res.locals.success = successFlash;
+    res.locals.error_msg = errorFlash;
+    res.locals.error = errorFlash;
     next();
 });
 

@@ -2,49 +2,42 @@ extends ../layout
 
 block content
   .container.mt-4
-    .card.shadow-lg.p-4
-      .card-header.bg-primary.text-white.py-3
-        h1.h4.mb-0 Dar de Alta a Paciente
-      .card-body
-        .card.bg-light.mb-4
-          .card-header.fw-bold Detalles de la Admisión
-          .card-body
-            p.mb-2 #[strong ID Admisión:] #{admision.id_admision}
-            p.mb-2 #[strong Paciente:] #{admision.paciente ? admision.paciente.nombre + ' ' + admision.paciente.apellido + ' (DNI: ' + admision.paciente.dni + ')' : 'Paciente Desconocido'}
-            p.mb-2 #[strong Fecha de Ingreso:] #{admision.fecha_ingreso ? new Date(admision.fecha_ingreso).toLocaleString('es-ES') : 'N/A'}
-            p.mb-2 #[strong Motivo de Internación:] #{admision.motivo_internacion || 'N/A'}
-            p.mb-2 #[strong Estado Actual:]
-              - const estadoClass = admision.estado_admision === 'Activa' ? 'bg-success' : admision.estado_admision === 'Dada de Alta' ? 'bg-primary' : admision.estado_admision === 'Cancelada' ? 'bg-danger' : 'bg-warning text-dark'
-              span(class=`badge ${estadoClass}`) #{admision.estado_admision}
+    if error && error.length > 0
+      .alert.alert-danger.alert-dismissible.fade.show
+        | #{error}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+
+    .card.shadow-sm.border-0.rounded-3
+      .card-header.bg-success.text-white.py-3
+        h4.mb-0 Generar Alta Médica
+      
+      .card-body.p-4
+        .alert.alert-success
+          strong Paciente: 
+          | #{admision.paciente.nombre} #{admision.paciente.apellido}
         
-        form(action="/altas", method="POST")
-          input(type="hidden", name="id_admision", value=admision.id_admision)
-          .card.mb-4
-            .card-header.fw-bold Datos del Alta Médica
-            .card-body
-              .row.g-3
-                .col-md-6
-                  label.form-label(for="id_medico") Médico Responsable
-                  select.form-select#id_medico(name="id_medico", required)
-                    option(value="") Seleccionar Médico
-                    each medico in medicos
-                      option(value=medico.id_medico)= medico.nombre + ' ' + medico.apellido
-                .col-md-6
-                  label.form-label(for="fecha_control_sugerido") Fecha de Control Sugerido
-                  input.form-control#fecha_control_sugerido(type="date", name="fecha_control_sugerido")
-                .col-12
-                  label.form-label(for="diagnostico_final") Diagnóstico Final
-                  textarea.form-control#diagnostico_final(name="diagnostico_final", placeholder="Diagnóstico final de internación", required, rows="3")
-                .col-12
-                  label.form-label(for="tratamiento_indicado") Tratamiento Indicado Post-Alta
-                  textarea.form-control#tratamiento_indicado(name="tratamiento_indicado", placeholder="Instrucciones de tratamiento, terapias, etc.", required, rows="3")
-                .col-12
-                  label.form-label(for="medicamentos_recetados") Medicamentos Recetados
-                  textarea.form-control#medicamentos_recetados(name="medicamentos_recetados", placeholder="Lista de medicamentos y dosis", required, rows="2")
-                .col-12
-                  label.form-label(for="observaciones_alta") Observaciones Adicionales
-                  textarea.form-control#observaciones_alta(name="observaciones_alta", rows="2")
+        form(action="/altas/nueva/" + admision.id_admision, method="POST")
+          .row.g-3
+            .col-md-6
+              label.form-label.fw-bold Médico que otorga el alta
+              select.form-select(name="id_medico", required)
+                option(value="", disabled, selected) Seleccionar...
+                if medicos
+                  each medico in medicos
+                    option(value=medico.id_medico) #{medico.nombre} #{medico.apellido}
+            
+            .col-md-6
+              label.form-label.fw-bold Condición del Alta
+              select.form-select(name="tipo_alta", required)
+                option(value="Alta Médica") Alta Médica Domiciliaria
+                option(value="Traslado") Traslado a otra institución
+                option(value="Alta Voluntaria") Alta Voluntaria (Fuga)
+                option(value="Óbito") Óbito (Fallecimiento)
+            
+            .col-12
+              label.form-label.fw-bold Epicrisis (Resumen de Internación e Indicaciones)
+              textarea.form-control(name="resumen_epicrisis", rows="6", required, placeholder="Detallar evolución, procedimientos realizados, diagnóstico final e indicaciones a seguir...")
           
-          .d-flex.justify-content-end.gap-2.mt-4
-            a.btn.btn-secondary(href="/admisiones/detalles/" + admision.id_admision) Cancelar
-            button.btn.btn-primary(type="submit") Confirmar Alta
+          .card-footer.bg-white.text-end.mt-4.pb-0.pe-0.border-0
+            a.btn.btn-secondary.me-2(href="/admisiones/detalles/" + admision.id_admision) Cancelar
+            button.btn.btn-success(type="submit") Confirmar Alta

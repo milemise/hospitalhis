@@ -1,40 +1,116 @@
 extends ../layout
 
 block content
-  .container.mt-4
-    .card.shadow-lg.p-4
-      .card-header.bg-primary.text-white.py-3
-        .d-flex.justify-content-between.align-items-center
-          h1.h4.mb-0 Gestión de Turnos
-          a.btn.btn-info.text-white(href="/turnos/nuevo")
-            i.fas.fa-plus-lg.me-1
-            | Nuevo Turno
-      .card-body
-        if turnos.length === 0
-          .alert.alert-info.mb-0 No hay turnos registrados en el sistema.
-        else
-          .table-responsive
-            table.table.table-striped.table-hover.align-middle.table-bordered
-              thead.table-light
-                tr
-                  th ID Turno
-                  th Paciente
-                  th Médico
-                  th Fecha y Hora
-                  th Estado
-                  th.text-center Acciones
-              tbody
-                each turno in turnos
+  .container-fluid.mt-4
+    .row.g-4
+      .col-xl-4.col-lg-5
+        .card.shadow-sm.border-0.rounded-3.h-100
+          .card-header.bg-primary.text-white.py-3
+            h5.mb-0 
+              i.fas.fa-calendar-alt.me-2
+              | Calendario
+          .card-body.p-3
+            #calendario
+
+      .col-xl-8.col-lg-7
+        .card.shadow-sm.border-0.rounded-3.h-100
+          .card-header.bg-primary.text-white.py-3.d-flex.justify-content-between.align-items-center
+            h2.h5.mb-0.fw-bold Gestión de Turnos
+            a.btn.btn-info.text-white.rounded-pill.px-3(href="/turnos/nuevo") 
+              i.fas.fa-plus.me-1
+              | Nuevo Turno
+          
+          .card-body.p-4
+            form.mb-4(action="/turnos", method="GET")
+              .row
+                .col-md-8.col-lg-7
+                  .input-group
+                    input.form-control(type="text", name="buscar", placeholder="Buscar por paciente o médico...", value=buscar)
+                    button.btn.btn-primary(type="submit")
+                      i.fas.fa-search
+                    if buscar
+                      a.btn.btn-outline-secondary(href="/turnos") Limpiar
+
+            .table-responsive
+              table.table.table-hover.align-middle.border
+                thead.table-light
                   tr
-                    td #{turno.id_turno}
-                    td #{turno.paciente ? turno.paciente.nombre + ' ' + turno.paciente.apellido : 'N/A'}
-                    td #{turno.medico ? turno.medico.nombre + ' ' + turno.medico.apellido : 'N/A'}
-                    td #{turno.fecha_hora ? new Date(turno.fecha_hora).toLocaleString('es-ES') : 'N/A'}
-                    td
-                      - const estadoClass = turno.estado === 'confirmado' ? 'bg-success' : turno.estado === 'cancelado' ? 'bg-danger' : turno.estado === 'finalizado' ? 'bg-primary' : 'bg-warning text-dark'
-                      span(class=`badge ${estadoClass}`) #{turno.estado}
-                    td.text-center
-                      .d-inline-flex.gap-2
-                        a.btn.btn-sm.btn-outline-primary(href="/turnos/editar/" + turno.id_turno) Editar
-                        form(action="/turnos/eliminar/" + turno.id_turno, method="POST", onsubmit="return confirm('¿Está seguro de eliminar este turno?');")
-                          button.btn.btn-sm.btn-outline-danger(type="submit") Eliminar
+                    th ID
+                    th Paciente
+                    th Médico
+                    th Fecha y Hora
+                    th Estado
+                    th Acciones
+                tbody
+                  if turnos && turnos.length > 0
+                    each turno in turnos
+                      tr
+                        td #{turno.id_turno}
+                        td #{turno.paciente ? turno.paciente.nombre + ' ' + turno.paciente.apellido : 'N/A'}
+                        td #{turno.medico ? turno.medico.nombre + ' ' + turno.medico.apellido : 'N/A'}
+                        td #{new Date(turno.fecha_hora).toLocaleString('es-ES')}
+                        td
+                          - const badgeColor = turno.estado === 'confirmado' ? 'bg-success' : turno.estado === 'cancelado' ? 'bg-danger' : 'bg-warning'
+                          span.badge.rounded-pill(class=badgeColor) #{turno.estado}
+                        td
+                          .btn-group.btn-group-sm
+                            a.btn.btn-outline-primary(href="/turnos/editar/" + turno.id_turno) Editar
+                            form(action="/turnos/eliminar/" + turno.id_turno, method="POST", onsubmit="return confirm('¿Seguro que desea eliminar?');", style="display:inline;")
+                              button.btn.btn-outline-danger(type="submit") Eliminar
+                  else
+                    tr
+                      td.text-center.text-muted(colspan="6") No hay turnos registrados.
+
+  .modal.fade#modalTurno(tabindex="-1")
+    .modal-dialog.modal-dialog-centered
+      .modal-content.border-0.shadow-lg
+        .modal-header.bg-primary.text-white
+          h5.modal-title 
+            i.fas.fa-info-circle.me-2
+            | Detalles del Turno
+          button.btn-close.btn-close-white(type="button", data-bs-dismiss="modal")
+        .modal-body.p-4
+          p.fs-5.mb-2 #[strong Paciente:] <span id="modalTurnoPaciente" class="text-secondary"></span>
+          p.fs-5.mb-0 #[strong Médico:] <span id="modalTurnoMedico" class="text-secondary"></span>
+        .modal-footer.bg-light
+          button.btn.btn-secondary(type="button", data-bs-dismiss="modal") Cerrar
+
+  script(src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js')
+  script.
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        var calendarEl = document.getElementById('calendario');
+        var turnosRaw = !{JSON.stringify(turnos ? turnos : [])};
+        
+        var eventosCalendario = turnosRaw.map(function(t) {
+          return {
+            title: t.paciente ? (t.paciente.nombre + ' ' + t.paciente.apellido) : 'Paciente Sin Nombre',
+            start: t.fecha_hora,
+            color: t.estado === 'confirmado' ? '#198754' : (t.estado === 'cancelado' ? '#dc3545' : '#ffc107'),
+            extendedProps: {
+              medico: t.medico ? (t.medico.nombre + ' ' + t.medico.apellido) : 'No asignado'
+            }
+          };
+        });
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth',
+          locale: 'es',
+          headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,listWeek' },
+          buttonText: { today: 'Hoy', month: 'Mes', list: 'Agenda' },
+          height: 550,
+          dayMaxEvents: 2,
+          events: eventosCalendario,
+          eventClick: function(info) {
+            document.getElementById('modalTurnoPaciente').textContent = info.event.title;
+            document.getElementById('modalTurnoMedico').textContent = info.event.extendedProps.medico;
+            var myModal = new bootstrap.Modal(document.getElementById('modalTurno'));
+            myModal.show();
+          }
+        });
+        
+        calendar.render();
+      } catch (error) {
+        console.error("Error renderizando el calendario:", error);
+      }
+    });

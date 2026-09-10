@@ -1,35 +1,67 @@
 extends ../layout
 
 block content
-  .row.justify-content-center
-    .col-md-8.col-lg-7
-      .card.shadow-sm.my-5
-        .card-header.bg-primary.text-white.py-3
-          h1.h4.mb-0 Registrar Nuevo Médico
+  .container.mt-4
+    if error && error.length > 0
+      .alert.alert-danger.alert-dismissible.fade.show
+        | #{error}
+        button.btn-close(type="button", data-bs-dismiss="alert")
+
+    .card.shadow-sm.border-0.rounded-3
+      .card-header.bg-primary.text-white.py-3
+        h4.mb-0 Registrar Nuevo Profesional Médico
+      
+      .card-body.p-4
         form(action="/medicos", method="POST")
-          .card-body.p-4
-            .row.g-3
-              .col-md-6
-                label.form-label(for="nombre") Nombre
-                input.form-control#nombre(type="text", name="nombre", placeholder="Nombre del médico", required)
-              .col-md-6
-                label.form-label(for="apellido") Apellido
-                input.form-control#apellido(type="text", name="apellido", placeholder="Apellido del médico", required)
-              .col-md-6
-                label.form-label(for="id_especialidad") Especialidad
-                select.form-select#id_especialidad(name="id_especialidad", required)
-                  option(value="") Seleccionar Especialidad
+          .row.g-3
+            .col-md-4
+              label.form-label.fw-bold DNI
+              input.form-control(type="text", name="dni", placeholder="Ej: 35123456")
+            
+            .col-md-4
+              label.form-label.fw-bold Nombre
+              input.form-control(type="text", name="nombre", required)
+            
+            .col-md-4
+              label.form-label.fw-bold Apellido
+              input.form-control(type="text", name="apellido", required)
+            
+            .col-md-4
+              label.form-label.fw-bold Fecha de Nacimiento
+              input.form-control(type="date", name="fecha_nacimiento")
+            
+            .col-md-4
+              label.form-label.fw-bold Género
+              select.form-select(name="genero")
+                option(value="") Seleccionar...
+                option(value="Masculino") Masculino
+                option(value="Femenino") Femenino
+                option(value="Otro") Otro
+            
+            .col-md-4
+              label.form-label.fw-bold Matrícula Profesional
+              input.form-control(type="text", name="matricula", required, placeholder="Ej: MP12345")
+            
+            .col-md-6
+              label.form-label.fw-bold Especialidad
+              select.form-select(name="id_especialidad")
+                option(value="") Seleccionar especialidad...
+                if especialidades
                   each esp in especialidades
-                    option(value=esp.id_especialidad)= esp.nombre
-              .col-md-6
-                label.form-label(for="matricula") Matrícula
-                input.form-control#matricula(type="text", name="matricula", placeholder="Matrícula profesional", required)
-              .col-md-6
-                label.form-label(for="telefono") Teléfono (Opcional)
-                input.form-control#telefono(type="text", name="telefono", placeholder="Número de teléfono")
-              .col-md-6
-                label.form-label(for="email") Email
-                input.form-control#email(type="email", name="email", placeholder="Correo electrónico", required)
-          .card-footer.text-end.bg-light
-            a.btn.btn-secondary(href="/medicos") Cancelar
-            button.btn.btn-primary.ms-2(type="submit") Guardar Médico
+                    option(value=esp.id_especialidad) #{esp.nombre}
+            
+            .col-md-6
+              label.form-label.fw-bold Teléfono
+              input.form-control(type="text", name="telefono")
+            
+            .col-md-6
+              label.form-label.fw-bold Email
+              input.form-control(type="email", name="email")
+            
+            .col-md-6
+              label.form-label.fw-bold Dirección
+              input.form-control(type="text", name="direccion")
+          
+          .card-footer.bg-white.text-end.mt-4.pb-0.pe-0.border-0
+            a.btn.btn-secondary.me-2(href="/medicos") Cancelar
+            button.btn.btn-primary(type="submit") Guardar Profesional
