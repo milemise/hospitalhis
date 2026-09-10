@@ -1,59 +1,78 @@
-Sistema HIS: Gestión Hospitalaria Simplificada
-Este proyecto es una aplicación web integral (HIS) diseñada para optimizar la gestión de pacientes e internaciones en un entorno hospitalario. Su objetivo principal es mejorar la eficiencia operativa, la calidad de la atención médica y la administración de recursos mediante una interfaz moderna y funcional.
+# 🏥 HisHospitales – Sistema de Gestión Hospitalaria (HIS)
 
-Funcionalidades Clave del Sistema
-El sistema implementa el flujo completo de atención al paciente desde la admisión hasta el alta, incluyendo la gestión de recursos hospitalarios:
+Este proyecto es una aplicación web integral (HIS) diseñada para optimizar la gestión de pacientes, internaciones e infraestructura en un entorno hospitalario. Su objetivo principal es mejorar la eficiencia operativa y la administración de recursos mediante una interfaz moderna, implementando el flujo completo de atención desde la admisión hasta el alta clínica.
 
-Proceso de Admisión y Recepción:
-Registro de Pacientes: Permite la creación y actualización de la información personal y médica de los pacientes.
-Admisión de Emergencia Flexible: En situaciones de emergencia, se puede registrar un paciente con solo el género obligatorio, generando automáticamente un DNI temporal (EMERG_...) y otros datos de relleno. La información completa se puede actualizar posteriormente.
-Asignación de Cama Inteligente: Asigna pacientes a camas disponibles considerando:
-Compatibilidad de género para camas en habitaciones compartidas.
-Gestión de Internaciones:
-Visibilidad de Admisiones: Lista detallada de todas las admisiones, con estados como Activa, En Proceso, Dada de Alta, Cancelada.
-Modificación de Admisiones: Permite actualizar los detalles de la internación, incluyendo cambios de cama.
-Control de Estado de Cama: Actualización automática del estado de la cama a Ocupada al asignar y Libre al dar de alta o cancelar.
-Gestión de Recursos Hospitalarios:
-Administración de Infraestructura: Gestión completa (CRUD) de Alas, Habitaciones y Camas, con sus estados y tipos.
-Gestión de Personal Médico: Administración (CRUD) de Médicos y Especialidades.
-Control de Historial y Procesos:
-Evaluación de Enfermería y Médica: Módulos para registrar evaluaciones periódicas y el plan de cuidados.
-Proceso de Alta Hospitalaria: Permite finalizar la internación de un paciente.
-Control de Acceso y Seguridad:
-Sistema de autenticación y autorización (RBAC) con roles (admin, medico, enfermero, recepcion).
-Protección de rutas mediante middlewares de autenticación y roles.
-Manejo de Errores y Flexibilidad:
-Consideración de errores de carga o arrepentimiento de admisión, permitiendo la cancelación lógica de admisiones (cambiando su estado a Cancelada) liberando la cama.
-Tecnologías Utilizadas
-El proyecto está desarrollado con un stack principal basado en Node.js y Express, siguiendo el paradigma de renderizado del lado del servidor:
-Backend: Node.js, Express, PostgreSQL, pg (cliente DB), Sequelize (ORM), bcryptjs (cifrado), express-session (sesiones), Passport.js (autenticación), connect-flash (mensajes flash), Helmet (seguridad/CSP), dotenv (variables de entorno), express-rate-limit.
-Frontend: Pug (motor de plantillas), Bootstrap (framework CSS), Font Awesome (iconos), JavaScript (Vanilla JS).
-Base de Datos: PostgreSQL .
- Requisitos e Instalación Local
-Para hacer funcionar el sistema:
+Proyecto final integrador para **Programación Web II**.
 
-Requisitos: Node.js (v14+), PostgreSQL.
-Clonar Repositorio:
+## 🚀 Tecnologías y Arquitectura
+
+El sistema está construido bajo el patrón arquitectónico **MVC (Modelo-Vista-Controlador)** y renderizado completamente del lado del servidor (SSR), prescindiendo de frameworks reactivos en el frontend para garantizar máxima seguridad y cumplimiento técnico.
+
+*   **Backend:** Node.js, Express.
+*   **Base de Datos:** PostgreSQL administrada mediante Sequelize (ORM). Diseño relacional normalizado en Tercera Forma Normal (3FN).
+*   **Frontend (SSR):** Motor de plantillas Pug, Bootstrap, FontAwesome, Vanilla JS.
+*   **Seguridad:** Encriptación de contraseñas (bcryptjs), sistema de autenticación y autorización (RBAC) con roles mediante Passport.js, y protección de rutas.
+
+## ⚙️ Funcionalidades Clave
+
+*   **Admisión de Emergencia Flexible:** Permite registrar un paciente sin datos completos, generando automáticamente un DNI temporal (`EMERG_...`) para no demorar la atención crítica.
+*   **Asignación de Cama Inteligente:** Valida la disponibilidad y aplica restricciones automáticas de compatibilidad de género en habitaciones compartidas.
+*   **Autocompletado de Personal Médico:** Integración de búsqueda inteligente para evitar duplicidad de datos cuando médicos o enfermeros ingresan como pacientes.
+*   **Evolución y Alta Médica:** Módulos para registrar evaluaciones, plan de cuidados y un sistema transaccional para la generación de Epicrisis que libera automáticamente las camas (estado "En limpieza").
+*   **Manejo de Errores y Flexibilidad:** Capacidad de realizar cancelaciones lógicas de admisiones ante errores de carga, revirtiendo la ocupación de camas.
+
+---
+
+## 🛠️ Requisitos e Instalación Local
+
+### 1. Clonar el Repositorio
+```bash
+git clone [https://github.com/milemise/hospitalhis.git](https://github.com/milemise/hospitalhis.git)
+cd hospitalhis
+2. Instalar Dependencias
 Bash
+npm install
+3. Configuración de Variables de Entorno
+Crea un archivo .env en la raíz del proyecto basándote en esta estructura:
 
-git clone <https://github.com/milemise/HisHospital>
-cd HisHospitales
-Instalar Dependencias: npm install
-Crear archivo .env y basarse acorde al .env.sample 
-   -DB_PASSWORD=colocar su contraseña de base de datos
-   -DB_NAME=colocar el nombre de su base de datos
-   -DB_USER=colocar el usuario de su base de datos
-   -DB_HOST=colocar el host de su base de datos y si es local "localhost:PUERTO"
-   -NODE_ENV=development
+Fragmento de código
+DB_USER=postgres
+DB_PASSWORD=tu_contraseña
+DB_NAME=tu_base_de_datos
+DB_HOST=localhost
+PORT=3000
+NODE_ENV=development
+SESSION_SECRET=clave_secreta_his_2026
+4. Preparar la Base de Datos
+Abre pgAdmin y crea una base de datos con el nombre definido en tu .env.
 
-Preparar la Base de Datos:
-Recomendado para una instalación limpia: Abrir pgAdmin,
-Crear DB llamada como el nombre de su base de datos en pgAdmin.
-Ejecutar el script SQL de respaldo desde la terminal:
+Restaura el archivo .sql de respaldo incluido en el repositorio para generar las tablas (3FN) y poblar los datos de prueba. Puedes hacerlo desde la terminal:
+
 Bash
-psql -U postgres -d his_internacion_pg -f respaldo/hospital.sql
-Usuarios de Prueba:
-admin: admin@his.com / Contraseña: admin 
-Iniciar la Aplicación: node app.js
+psql -U postgres -d tu_base_de_datos -f respaldo/hospital.sql
+5. Iniciar la Aplicación
+Bash
+npm start
+El sistema estará disponible en http://localhost:3000/auth/login.
 
-Luego, acceder a http://localhost:3000/auth/login en tu navegador.
+🔐 Usuarios de Prueba (Roles RBAC)
+Para evaluar los distintos niveles de acceso y módulos del sistema, utiliza las siguientes credenciales de prueba incluidas en el backup:
+
+Administrador / Recepción: admin@his.com | Clave: admin
+
+(Si tienes usuarios específicos para enfermería o médicos creados en tu base de datos, agrégalos aquí).
+
+💡 Informe de Desarrollo: Problemas y Soluciones
+Durante el ciclo de desarrollo, se identificaron y resolvieron los siguientes desafíos técnicos:
+
+Concurrencia en el Alta Médica:
+
+Problema: Al registrar un alta médica, la tabla altas rechazaba la inserción por restricciones NOT NULL en columnas de diagnóstico y medicación que a veces eran opcionales desde la interfaz.
+
+Solución: Se relajaron las restricciones a nivel DB (ALTER TABLE) y se implementó una Transacción de Sequelize. Esto garantiza que la creación del alta, la actualización del paciente y la liberación de la cama se ejecuten como un bloque atómico, protegiendo la integridad de la base ante cortes.
+
+Duplicidad de Registros del Personal:
+
+Problema: Si un médico ingresaba como paciente, registrarlo de nuevo rompía la 3FN (redundancia).
+
+Solución: Se desarrolló un endpoint asíncrono (/buscar-personal). Al escribir un nombre en admisión, el backend separa las cadenas y busca en la tabla de medicos, autocompletando instantáneamente el formulario y unificando el registro.
